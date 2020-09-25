@@ -14,5 +14,7 @@
 3. build  
     ```
     $ cd build  
-    $ dkb nvcc -lGL -lGLU -lglut ../chapter07/heat.cu  # or any .cu file
+    $ build_main
+      or
+    $ build_test
     ```

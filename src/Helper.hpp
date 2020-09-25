@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <cstdint>
+#include <cuda_runtime_api.h> // cudaError_t
 
 using float32_t = float;
 using float64_t = double;
