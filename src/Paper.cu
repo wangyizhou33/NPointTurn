@@ -1,6 +1,18 @@
 #include "Paper.hpp"
 
-__device__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
+__global__ void writeOnes(uint32_t* R, uint32_t offset)
+{
+    uint32_t tid = threadIdx.x;
+    uint32_t val = 4294967295;
+
+    if (tid % 2)
+        bitVectorWrite(R, val, tid * 32 + offset);
+
+    if (!(tid % 2))
+        bitVectorWrite(R, val, tid * 32 + offset);
+};
+
+__device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
 {
     uint32_t cm = (c >> 5);
     uint32_t cr = (c & 31);
@@ -8,7 +20,7 @@ __device__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
     return Ro;
 }
 
-__device__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c)
+__device__ __host__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c)
 {
     uint32_t cm = (c >> 5);
     uint32_t cr = (c & 31);
@@ -16,28 +28,28 @@ __device__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c)
     R[cm + 1]   = ((R[cm + 1] & (~((1 << cr) - 1))) | (val >> (32 - cr)));
 }
 
-__device__ float32_t deg2Rad(float32_t deg)
+__device__ __host__ float32_t deg2Rad(float32_t deg)
 {
     return 0.0174533f * deg;
 };
 
-__device__ uint32_t volCoord(uint32_t x,
-                             uint32_t y,
-                             uint32_t theta,
-                             uint32_t X_DIM,
-                             uint32_t Y_DIM)
+__device__ __host__ uint32_t volCoord(uint32_t x,
+                                      uint32_t y,
+                                      uint32_t theta,
+                                      uint32_t X_DIM,
+                                      uint32_t Y_DIM)
 {
     return (x + X_DIM * (y + Y_DIM * theta));
 }
 
-__device__ uint32_t turnCoordLeft(uint32_t x,
-                                  uint32_t y,
-                                  uint32_t theta,
-                                  uint32_t X_DIM,
-                                  uint32_t Y_DIM,
-                                  float32_t POS_RES,
-                                  float32_t HDG_RES,
-                                  float32_t turnRadius)
+__device__ __host__ uint32_t turnCoordLeft(uint32_t x,
+                                           uint32_t y,
+                                           uint32_t theta,
+                                           uint32_t X_DIM,
+                                           uint32_t Y_DIM,
+                                           float32_t POS_RES,
+                                           float32_t HDG_RES,
+                                           float32_t turnRadius)
 {
     float32_t actualX  = static_cast<float32_t>(x - (X_DIM >> 1)) * POS_RES + turnRadius * sin(deg2Rad(static_cast<float32_t>(theta * HDG_RES)));
     float32_t actualY  = static_cast<float32_t>(y - (Y_DIM >> 1)) * POS_RES + turnRadius * (1.0f - cos(deg2Rad(static_cast<float32_t>(theta * HDG_RES))));

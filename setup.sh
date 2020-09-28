@@ -53,7 +53,7 @@ build_main() {
 
 build_tests() {
     format
-    dkb nvcc tests/tests.cpp -o test /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
+    dkb nvcc tests/tests.cu src/Paper.cu -o test /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
 }
 
 clean() {

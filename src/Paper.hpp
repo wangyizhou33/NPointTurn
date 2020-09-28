@@ -16,4 +16,26 @@ void bitSweepLeft(uint32_t* RbO,
                   float32_t turnRadius,
                   cudaStream_t cuStream = nullptr);
 
+__global__ void writeOnes(uint32_t* R, uint32_t offset);
+
+__device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c);
+__device__ __host__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c);
+
+__device__ __host__ float32_t deg2Rad(float32_t deg);
+
+__device__ __host__ uint32_t volCoord(uint32_t x,
+                                      uint32_t y,
+                                      uint32_t theta,
+                                      uint32_t X_DIM,
+                                      uint32_t Y_DIM);
+
+__device__ __host__ uint32_t turnCoordLeft(uint32_t x,
+                                           uint32_t y,
+                                           uint32_t theta,
+                                           uint32_t X_DIM,
+                                           uint32_t Y_DIM,
+                                           float32_t POS_RES,
+                                           float32_t HDG_RES,
+                                           float32_t turnRadius);
+
 #endif // PAPER_HPP_
