@@ -3,12 +3,19 @@
 
 #include "Helper.hpp"
 
-constexpr uint32_t X_DIM    = 96u;
-constexpr uint32_t Y_DIM    = 96u;
-constexpr float32_t POS_RES = 0.5f;
-constexpr float32_t HDG_RES = 1.0f;
-constexpr uint32_t X_CELLS  = X_DIM / 32u;
-constexpr uint32_t Y_CELLS  = Y_DIM / 32u;
+constexpr uint32_t X_DIM      = 32u * 5u;
+constexpr uint32_t Y_DIM      = 32u * 5u;
+constexpr float32_t POS_RES   = 0.5f;
+constexpr float32_t HDG_RES   = 1.0f;
+constexpr uint32_t X_CELLS    = X_DIM / 32u;
+constexpr uint32_t Y_CELLS    = Y_DIM / 32u;
+constexpr uint32_t THETA_STEP = 360u;
+constexpr uint32_t GRID_SIZE  = X_DIM * Y_DIM * THETA_STEP;
+constexpr float32_t HALF_X    = X_DIM / 2;
+constexpr float32_t HALF_Y    = Y_DIM / 2;
+constexpr float32_t TURN_R    = 10.0f;
+
+__device__ __host__ uint32_t countBits(uint32_t n);
 
 void bitSweepLeft(uint32_t* RbO,
                   const uint32_t* Fb,
