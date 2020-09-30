@@ -179,9 +179,6 @@ TEST(PaperTests, Reachability)
     uint32_t *reach0, *reach1, *reach2;
     uint32_t* dev_fb;
 
-    // byte size
-    constexpr size_t SIZE = GRID_SIZE / 32u * sizeof(uint32_t);
-
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach2, SIZE));
@@ -210,17 +207,18 @@ TEST(PaperTests, Reachability)
     HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
                             cudaMemcpyHostToDevice));
 
-    bitSweepLeft(dev_reach1,
-                 dev_fb,
-                 dev_reach0,
-                 10.f,
-                 nullptr);
-    cudaDeviceSynchronize();
+    TIME_PRINT("sweep ",
+               bitSweepLeft(dev_reach1,
+                            dev_fb,
+                            dev_reach0,
+                            -TURN_R,
+                            nullptr);
+               cudaDeviceSynchronize(););
+
     HANDLE_ERROR(cudaGetLastError());
 
     HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
                             cudaMemcpyDeviceToHost));
-    cudaDeviceSynchronize();
 
     // assert each theta slice has 32 ON-bits
     for (uint32_t theta = 0; theta < 360; ++theta)

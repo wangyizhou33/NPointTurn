@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <cuda_runtime_api.h> // cudaError_t
+#include <chrono>
 
 using float32_t = float;
 using float64_t = double;
@@ -28,9 +29,8 @@ static void HandleError(cudaError_t err, const char* file, int line)
         }                                                                        \
     }
 
-#ifndef PRINT_TIMING
-#define PRINT_TIMING
 constexpr bool DEBUG_PRINT_RESULTS = true;
+#ifndef PRINT_TIMING
 #define TIME_PRINT(name, a)                                                                                                    \
     if (DEBUG_PRINT_RESULTS)                                                                                                   \
     {                                                                                                                          \

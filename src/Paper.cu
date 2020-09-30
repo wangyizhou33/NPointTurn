@@ -11,6 +11,24 @@ __device__ __host__ uint32_t countBits(uint32_t n)
     return count;
 }
 
+uint32_t countBitsInVolume(uint32_t* vol)
+{
+    uint32_t reachableBitCount = 0u;
+
+    for (uint32_t theta = 0; theta < 360; ++theta)
+    {
+        uint32_t startIndex = X_DIM * Y_DIM * theta;
+        uint32_t endIndex   = X_DIM * Y_DIM * (theta + 1);
+
+        for (uint32_t coordIndex = startIndex / 32; coordIndex < endIndex / 32; coordIndex++)
+        {
+            reachableBitCount += countBits(vol[coordIndex]);
+        }
+    }
+
+    return reachableBitCount;
+}
+
 __global__ void writeOnes(uint32_t* R, uint32_t offset)
 {
     uint32_t tid = threadIdx.x;
@@ -100,7 +118,10 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
     uint32_t cid = y * blockDim.x + tid;
     // printf("cid %u\n", cid);
 
-    if (tid == 0 || tid + 1 == blockDim.x)
+    if (tid == 0 ||
+        tid + 1 == blockDim.x ||
+        y > Y_DIM - 32 ||
+        y < 32)
     {
         return;
     }
