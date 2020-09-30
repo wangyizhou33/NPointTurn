@@ -89,23 +89,6 @@ TEST(PaperTests, RaceConditionGPU)
 
 TEST(PaperTests, TurnCoord)
 {
-    // for (uint32_t theta = 0; theta < 360; ++theta)
-    // {
-    //     std::cerr << theta << " "
-    //               << turnCoordLeft(X_DIM / 2, Y_DIM / 2, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R)
-    //               << std::endl;
-    // }
-
-    // for (uint32_t y = 0; y < X_DIM; ++y)
-    // {
-    //     for (uint32_t x = 0; x < Y_DIM; ++x)
-    //     {
-    //         std::cerr << turnCoordLeft(x, y, 0,
-    //                                    X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R)
-    //                   << std::endl;
-    //     }
-    // }
-
     // assert every theta slice is a pure translation
     // i.e. turnCoord(x, y, theta + 1) -> turnCoord(x, y, theta) is the same as
     // turnCoord(x+1, y, theta + 1) -> turnCoord(x+1, y, theta)
@@ -221,8 +204,8 @@ TEST(PaperTests, Reachability)
     // set reach0
     uint32_t middle = turnCoordLeft(X_DIM / 2, Y_DIM / 2, 0,
                                     X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
-    std::cerr << "middle " << middle << " " << middle / 32 << std::endl;
-    bitVectorWrite(reach0, 7, middle);
+
+    bitVectorWrite(reach0, 4294967295, middle);
 
     HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
                             cudaMemcpyHostToDevice));
@@ -249,12 +232,9 @@ TEST(PaperTests, Reachability)
 
         for (uint32_t coordIndex = startIndex / 32; coordIndex < endIndex / 32; coordIndex++)
         {
-            // std::cerr << coordIndex << std::endl;
             reachableBitCount += countBits(reach1[coordIndex]);
-            // if (countBits(reach0[coordIndex]))
-            //     std::cerr << "\t" << coordIndex << std::endl;
         }
-        if (reachableBitCount != 3)
+        if (reachableBitCount != 32)
             std::cerr << " theta " << theta
                       << " reachable bits " << reachableBitCount << std::endl;
     }

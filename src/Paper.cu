@@ -116,29 +116,15 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
         R &= F1;
         R |= R1;
 
-        if (countBits(R))
-        {
-            printf("%u %u %u %u %u %u\n", theta, cid, R, x, y, c);
-        }
-
-        if (cid == 400)
-            printf("%u %u %u %u %u %u\n", theta, cid, R, x, y, c);
-
         if (cid & 1)
         {
             bitVectorWrite(RbO, R, c);
-            // if (R)
-            //     printf("odd: %u\n", bitVectorRead(RbO, c));
         }
 
         if (!(cid & 1))
         {
             bitVectorWrite(RbO, R, c);
-            // if (R)
-            //     printf("even: %u\n", bitVectorRead(RbO, c));
         }
-        // if (R)
-        //     printf("after: %u\n", bitVectorRead(RbO, c));
     }
 }
 
