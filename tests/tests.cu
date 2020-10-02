@@ -71,7 +71,8 @@ TEST(PaperTests, RaceConditionGPU)
                             cudaMemcpyHostToDevice));
 
     uint32_t offset = 15u; // consistent with writeOnes
-    writeOnes<<<1, N - 2>>>(dev_cell, offset);
+    writeOnes<<<1, N - 1>>>(dev_cell, offset);
+    HANDLE_ERROR(cudaDeviceSynchronize());
 
     HANDLE_ERROR(cudaMemcpy(cell, dev_cell, N * sizeof(uint32_t),
                             cudaMemcpyDeviceToHost));
@@ -131,9 +132,9 @@ TEST(PaperTests, temp)
     cells[1] = 4294967295;
     cells[2] = 4294967295;
 
-    std::cerr << bitVectorRead(&cells.front(), 0) << std::endl;
-    std::cerr << bitVectorRead(&cells.front(), 1) << std::endl;
-    std::cerr << bitVectorRead(&cells.front(), 2) << std::endl;
+    // std::cerr << bitVectorRead(&cells.front(), 0) << std::endl;
+    // std::cerr << bitVectorRead(&cells.front(), 1) << std::endl;
+    // std::cerr << bitVectorRead(&cells.front(), 2) << std::endl;
 }
 
 TEST(PaperTests, RaceConditionCPU)

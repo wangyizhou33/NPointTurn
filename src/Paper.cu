@@ -32,13 +32,26 @@ uint32_t countBitsInVolume(uint32_t* vol)
 __global__ void writeOnes(uint32_t* R, uint32_t offset)
 {
     uint32_t tid = threadIdx.x;
-    uint32_t val = 4294967295;
+    uint32_t val = (tid != 3) ? 4294967295 : 0;
 
-    if (tid % 2)
-        bitVectorWrite(R, val, tid * 32 + offset);
+    // option1: no concurrent write for adjacent threads
+    // if (tid % 2)
+    //     bitVectorWrite(R, val, tid * 32 + offset);
 
-    if (!(tid % 2))
-        bitVectorWrite(R, val, tid * 32 + offset);
+    // if (!(tid % 2))
+    //     bitVectorWrite(R, val, tid * 32 + offset);
+
+    // option2: send data up in a "lane"
+    uint32_t remainder  = val << offset;
+    uint32_t receiveVal = 0;
+    uint32_t sendVal    = val >> (32 - offset);
+
+    // __shfl_up(xx,xxx,1,xx)
+    receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 4);
+
+    printf("tid: %u, remainder: %u, sendVal: %u, receiveVal: %u \n", tid, remainder, sendVal, receiveVal);
+
+    bitVectorWrite(R, remainder + receiveVal, tid * 32);
 };
 
 __device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
