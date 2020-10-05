@@ -127,14 +127,19 @@ TEST(PaperTests, TurnCoord)
 
 TEST(PaperTests, temp)
 {
-    std::array<uint32_t, 10> cells{};
-    cells[0] = 4294934528;
-    cells[1] = 4294967295;
-    cells[2] = 4294967295;
+    // std::array<uint32_t, 10> cells{};
+    // cells[0] = 4294934528;
+    // cells[1] = 4294967295;
+    // cells[2] = 4294967295;
 
     // std::cerr << bitVectorRead(&cells.front(), 0) << std::endl;
     // std::cerr << bitVectorRead(&cells.front(), 1) << std::endl;
     // std::cerr << bitVectorRead(&cells.front(), 2) << std::endl;
+
+    for (uint32_t cr = 0; cr < 32; ++cr)
+    {
+        std::cout << cr << " " << ~((1u << cr) - 1u) << std::endl;
+    }
 }
 
 TEST(PaperTests, RaceConditionCPU)
@@ -212,7 +217,7 @@ TEST(PaperTests, Reachability)
                bitSweepLeft(dev_reach1,
                             dev_fb,
                             dev_reach0,
-                            -TURN_R,
+                            TURN_R,
                             nullptr);
                cudaDeviceSynchronize(););
 

@@ -35,23 +35,24 @@ __global__ void writeOnes(uint32_t* R, uint32_t offset)
     uint32_t val = (tid != 3) ? 4294967295 : 0;
 
     // option1: no concurrent write for adjacent threads
-    // if (tid % 2)
-    //     bitVectorWrite(R, val, tid * 32 + offset);
+    if (tid % 2)
+        bitVectorWrite(R, val, tid * 32 + offset);
 
-    // if (!(tid % 2))
-    //     bitVectorWrite(R, val, tid * 32 + offset);
+    if (!(tid % 2))
+        bitVectorWrite(R, val, tid * 32 + offset);
 
     // option2: send data up in a "lane"
-    uint32_t remainder  = val << offset;
-    uint32_t receiveVal = 0;
-    uint32_t sendVal    = val >> (32 - offset);
+    // uint32_t remainder  = val << offset;
+    // uint32_t receiveVal = 0;
+    // uint32_t sendVal    = val >> (32 - offset);
 
-    // __shfl_up(xx,xxx,1,xx)
-    receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 4);
+    // // __shfl_up(xx,xxx,1,xx)
+    // receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 4);
 
-    printf("tid: %u, remainder: %u, sendVal: %u, receiveVal: %u \n", tid, remainder, sendVal, receiveVal);
+    // printf("tid: %u, remainder: %u, sendVal: %u, receiveVal: %u \n", tid, remainder, sendVal, receiveVal);
 
-    bitVectorWrite(R, remainder + receiveVal, tid * 32);
+    // bitVectorWrite(R, remainder + receiveVal, tid * 32);
+    // bitVectorWrite(R, val, tid * 32 + offset);
 };
 
 __device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
@@ -75,8 +76,8 @@ __device__ __host__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c)
     R[cm]       = ((R[cm] & ((1 << cr) - 1)) | (val << cr));
     if (cr)
         R[cm + 1] = ((R[cm + 1] & (~((1 << cr) - 1))) | (val >> (32 - cr)));
-    else
-        R[cm + 1] = R[cm + 1] & (~((1 << cr) - 1));
+    // else
+    //     R[cm + 1] = R[cm + 1] & (~((1 << cr) - 1));
 }
 
 __device__ __host__ float32_t deg2Rad(float32_t deg)
@@ -127,7 +128,6 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
     uint32_t tid = threadIdx.x; // [0, 5)
     uint32_t x   = tid * 32;
     uint32_t y   = blockIdx.x; // [0, 160)
-
     uint32_t cid = y * blockDim.x + tid;
     // printf("cid %u\n", cid);
 
@@ -142,14 +142,15 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
     uint32_t R = 0;
     for (uint32_t theta = 0; theta < 360; theta++)
     {
-        uint32_t c = turnCoordLeft(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
-
+        uint32_t c  = turnCoordLeft(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
         uint32_t F1 = bitVectorRead(Fb, c);
         uint32_t R1 = bitVectorRead(RbI, c);
 
         R &= F1;
         R |= R1;
 
+        // option1: perf is about 0.1 ms slower
+        // than concurrent write
         if (cid & 1)
         {
             bitVectorWrite(RbO, R, c);
@@ -159,6 +160,17 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
         {
             bitVectorWrite(RbO, R, c);
         }
+
+        // option2: __shfl
+        // uint32_t cm = (c >> 5); // always the starting bit of a uint32_t memory
+        // uint32_t cr = (c & 31); // shift cr bits
+
+        // uint32_t remainder  = (R << cr);                                    // part of R that should be written in this RbO[cm]
+        // uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;               // part of R that should be written in this RbO[cm + 1]
+        // uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 8); // receive from the thread tid-1
+
+        // bitVectorWrite(RbO, remainder + receiveVal, cm * 32);
+        // bitVectorWrite(RbO, R, c);
     }
 }
 
@@ -168,5 +180,6 @@ void bitSweepLeft(uint32_t* RbO,
                   float32_t turnRadius,
                   cudaStream_t cuStream)
 {
-    _bitSweepLeft<<<Y_DIM, X_DIM / 32, 0, cuStream>>>(RbO, Fb, RbI, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
+    constexpr uint32_t ROWS_PER_BLOCK = 1u; // 1, 2, 4, 8, 16, 32
+    _bitSweepLeft<<<Y_DIM / ROWS_PER_BLOCK, ROWS_PER_BLOCK * X_DIM / 32, 0, cuStream>>>(RbO, Fb, RbI, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
 }
