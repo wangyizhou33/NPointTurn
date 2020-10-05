@@ -42,8 +42,7 @@ cib() {
 }
 
 format() {
-    dkb clang-format -i src/*
-    dkb clang-format -i tests/*
+    dkb clang-format -i src/* tests/*
 }
 
 build_main() {

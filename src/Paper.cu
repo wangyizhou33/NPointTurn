@@ -31,13 +31,14 @@ uint32_t countBitsInVolume(uint32_t* vol)
 
 __global__ void writeOnes(uint32_t* R, uint32_t offset)
 {
-    uint32_t tid = threadIdx.x;
-    uint32_t val = (tid != 3) ? 4294967295 : 0;
+    uint32_t tid    = threadIdx.x;
+    uint32_t val    = (tid + 1 != blockDim.x) ? 4294967295 : 0;
+    uint32_t laneid = tid % 32;
 
     // option1: no concurrent write for adjacent threads
     if (tid % 2)
         bitVectorWrite(R, val, tid * 32 + offset);
-
+    __syncthreads();
     if (!(tid % 2))
         bitVectorWrite(R, val, tid * 32 + offset);
 
@@ -47,11 +48,13 @@ __global__ void writeOnes(uint32_t* R, uint32_t offset)
     // uint32_t sendVal    = val >> (32 - offset);
 
     // // __shfl_up(xx,xxx,1,xx)
-    // receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 4);
-
-    // printf("tid: %u, remainder: %u, sendVal: %u, receiveVal: %u \n", tid, remainder, sendVal, receiveVal);
+    // receiveVal = __shfl_sync(0xffffffff, sendVal, laneid - 1, 32);
+    // if (receiveVal == 0)
+    //     printf("tid: %u, laneid: %u, remainder: %u, sendVal: %u, receiveVal: %u \n", tid, laneid, remainder, sendVal, receiveVal);
 
     // bitVectorWrite(R, remainder + receiveVal, tid * 32);
+
+    // option3: naive concurrent write
     // bitVectorWrite(R, val, tid * 32 + offset);
 };
 

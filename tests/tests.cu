@@ -55,7 +55,7 @@ TEST(PaperTests, BitVectorWrite)
 
 TEST(PaperTests, RaceConditionGPU)
 {
-    constexpr size_t N = 5;
+    constexpr size_t N = 32 * 32;
 
     // 4 cells of off bits
     uint32_t *cell, *dev_cell;
@@ -71,17 +71,26 @@ TEST(PaperTests, RaceConditionGPU)
                             cudaMemcpyHostToDevice));
 
     uint32_t offset = 15u; // consistent with writeOnes
-    writeOnes<<<1, N - 1>>>(dev_cell, offset);
+    writeOnes<<<1, N>>>(dev_cell, offset);
     HANDLE_ERROR(cudaDeviceSynchronize());
 
     HANDLE_ERROR(cudaMemcpy(cell, dev_cell, N * sizeof(uint32_t),
                             cudaMemcpyDeviceToHost));
 
     EXPECT_EQ(4294934528, bitVectorRead(cell, 0)); // 2^32 - 2^offset
-    EXPECT_EQ(4294967295, bitVectorRead(cell, offset + 32 * 0));
-    EXPECT_EQ(4294967295, bitVectorRead(cell, offset + 32 * 1));
-    EXPECT_EQ(4294967295, bitVectorRead(cell, offset + 32 * 2));
-    EXPECT_EQ(32767, bitVectorRead(cell, 32 * 3)); // 2^offset - 1
+    for (uint32_t i = 0; i + 1 < N; ++i)
+    {
+        uint32_t expect = 4294967295;
+        uint32_t actual = bitVectorRead(cell, offset + 32 * i);
+
+        if (expect != actual)
+        {
+            std::cerr << i << " " << expect << " " << actual << std::endl;
+            EXPECT_TRUE(false);
+        }
+        EXPECT_EQ(4294967295, bitVectorRead(cell, offset + 32 * i));
+    }
+    EXPECT_EQ(32767, bitVectorRead(cell, 32 * (N - 1))); // 2^offset - 1
 
     // delete
     HANDLE_ERROR(cudaFree(dev_cell));
