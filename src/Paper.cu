@@ -58,6 +58,23 @@ __global__ void writeOnes(uint32_t* R, uint32_t offset)
     // bitVectorWrite(R, val, tid * 32 + offset);
 };
 
+__global__ void shuffle(uint32_t* R)
+{
+    uint32_t tid = threadIdx.x;
+
+    uint32_t send = (1 << tid);
+
+    uint32_t receive = __shfl_sync(0xffffffff, send, tid - 1, 8);
+
+    // equivalently
+    // uint32_t receive = __shfl_down_sync(0xffffffff, send, 1, 8);
+    // @note: mask tends to do nothing
+
+    printf("tid: %u, send: %u, receive: %u\n", tid, send, receive);
+
+    R[tid] = receive;
+}
+
 __device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
 {
     uint32_t cm = (c >> 5);

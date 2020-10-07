@@ -24,6 +24,8 @@ uint32_t countBitsInVolume(uint32_t* vol);
 
 __global__ void writeOnes(uint32_t* R, uint32_t offset);
 
+__global__ void shuffle(uint32_t* R);
+
 __device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c);
 __device__ __host__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c);
 

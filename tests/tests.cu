@@ -263,6 +263,36 @@ TEST(PaperTests, Reachability)
     free(reach2);
 }
 
+TEST(PaperTests, shuffle)
+{
+    constexpr size_t N = 8;
+
+    // 4 cells of off bits
+    uint32_t *cell, *dev_cell;
+
+    cell = (uint32_t*)malloc(N * sizeof(uint32_t));
+    for (uint32_t i = 0; i < N; ++i)
+    {
+        cell[i] = 0u;
+    }
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_cell, N * sizeof(uint32_t)));
+    HANDLE_ERROR(cudaMemcpy(dev_cell, cell, N * sizeof(uint32_t),
+                            cudaMemcpyHostToDevice));
+
+    shuffle<<<1, N>>>(dev_cell);
+    HANDLE_ERROR(cudaDeviceSynchronize());
+
+    HANDLE_ERROR(cudaMemcpy(cell, dev_cell, N * sizeof(uint32_t),
+                            cudaMemcpyDeviceToHost));
+
+    for (uint32_t i = 1u; i < N; ++i)
+    {
+        EXPECT_EQ(1 << (i - 1u), cell[i]);
+    }
+    EXPECT_EQ((1 << 7), cell[0]);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
