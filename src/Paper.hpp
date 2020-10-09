@@ -4,8 +4,8 @@
 #include "Helper.hpp"
 
 constexpr uint32_t ITER_CNT   = 10u;
-constexpr uint32_t X_DIM      = 32u * 5u;
-constexpr uint32_t Y_DIM      = 32u * 5u;
+constexpr uint32_t X_DIM      = 32u * 4u;
+constexpr uint32_t Y_DIM      = 32u * 4u;
 constexpr float32_t POS_RES   = 0.5f;
 constexpr float32_t HDG_RES   = 1.0f;
 constexpr uint32_t X_CELLS    = X_DIM / 32u;
@@ -37,14 +37,21 @@ __device__ __host__ uint32_t volCoord(uint32_t x,
                                       uint32_t X_DIM,
                                       uint32_t Y_DIM);
 
-__device__ __host__ uint32_t turnCoordLeft(uint32_t x,
-                                           uint32_t y,
-                                           uint32_t theta,
-                                           uint32_t X_DIM,
-                                           uint32_t Y_DIM,
-                                           float32_t POS_RES,
-                                           float32_t HDG_RES,
-                                           float32_t turnRadius);
+__device__ __host__ void turnCoord(float32_t& xout, // meter
+                                   float32_t& yout, // meter
+                                   float32_t xin,
+                                   float32_t yin,
+                                   float32_t theta,       // degree
+                                   float32_t turnRadius); // meter
+
+__device__ __host__ uint32_t turnCoord(uint32_t x,
+                                       uint32_t y,
+                                       uint32_t theta,
+                                       uint32_t X_DIM,
+                                       uint32_t Y_DIM,
+                                       float32_t POS_RES,
+                                       float32_t HDG_RES,
+                                       float32_t turnRadius);
 
 void bitSweepLeft(uint32_t* RbO,
                   const uint32_t* Fb,

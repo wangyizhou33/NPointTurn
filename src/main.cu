@@ -21,8 +21,8 @@ int main(void)
     HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
 
     // set start
-    uint32_t origin = turnCoordLeft(X_DIM / 2, Y_DIM / 2, 0,
-                                    X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+    uint32_t origin = turnCoord(X_DIM / 2, Y_DIM / 2, 0,
+                                X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
     bitVectorWrite(reach[0], 1, origin);
 
     // host to device

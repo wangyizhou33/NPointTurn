@@ -97,7 +97,7 @@ TEST(PaperTests, RaceConditionGPU)
     free(cell);
 }
 
-TEST(PaperTests, TurnCoord)
+TEST(PaperTests, TurnCoord1)
 {
     // assert every theta slice is a pure translation
     // i.e. turnCoord(x, y, theta + 1) -> turnCoord(x, y, theta) is the same as
@@ -110,14 +110,14 @@ TEST(PaperTests, TurnCoord)
     for (uint32_t theta = 0; theta < 360; ++theta)
     {
 
-        uint32_t a1 = turnCoordLeft(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
-        uint32_t a2 = turnCoordLeft(x, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+        uint32_t a1 = turnCoord(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+        uint32_t a2 = turnCoord(x, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
         uint32_t a  = a2 - a1;
 
         for (int32_t i = -X_DIM / 2; i <= X_DIM / 2; ++i)
         {
-            uint32_t b1 = turnCoordLeft(x + i, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
-            uint32_t b2 = turnCoordLeft(x + i, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+            uint32_t b1 = turnCoord(x + i, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+            uint32_t b2 = turnCoord(x + i, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
             uint32_t b  = b2 - b1;
 
             EXPECT_EQ(a, b);
@@ -125,12 +125,34 @@ TEST(PaperTests, TurnCoord)
 
         for (int32_t i = -Y_DIM / 2; i <= Y_DIM / 2; ++i)
         {
-            uint32_t b1 = turnCoordLeft(x, y + i, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
-            uint32_t b2 = turnCoordLeft(x, y + i, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+            uint32_t b1 = turnCoord(x, y + i, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+            uint32_t b2 = turnCoord(x, y + i, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
             uint32_t b  = b2 - b1;
 
             EXPECT_EQ(a, b);
         }
+    }
+}
+
+TEST(PaperTests, TurnCoord2)
+{
+    // assert the circular shape of the turn coord
+    float32_t x{0.f};
+    float32_t y{0.f};
+    float32_t tol = 1e-4f;
+
+    for (float32_t theta = 0.f; theta <= 360.f; theta += 1.0f)
+    {
+        float32_t xout{};
+        float32_t yout{};
+
+        // center of the trajectory is (0, TURN_R)
+        turnCoord(xout, yout, x, y, theta, TURN_R);
+        EXPECT_NEAR(TURN_R * TURN_R, xout * xout + (yout - TURN_R) * (yout - TURN_R), tol);
+
+        // center of the trajectory is (0, -TURN_R)
+        turnCoord(xout, yout, x, y, theta, -TURN_R);
+        EXPECT_NEAR(TURN_R * TURN_R, xout * xout + (yout + TURN_R) * (yout + TURN_R), tol);
     }
 }
 
@@ -214,8 +236,8 @@ TEST(PaperTests, Reachability)
     HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
 
     // set reach0
-    uint32_t middle = turnCoordLeft(X_DIM / 2, Y_DIM / 2, 0,
-                                    X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+    uint32_t middle = turnCoord(X_DIM / 2, Y_DIM / 2, 0,
+                                X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
 
     bitVectorWrite(reach0, 4294967295, middle);
 

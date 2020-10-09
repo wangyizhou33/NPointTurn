@@ -114,19 +114,37 @@ __device__ __host__ uint32_t volCoord(uint32_t x,
     return (x + X_DIM * (y + Y_DIM * theta));
 }
 
-__device__ __host__ uint32_t turnCoordLeft(uint32_t x,
-                                           uint32_t y,
-                                           uint32_t theta,
-                                           uint32_t X_DIM,
-                                           uint32_t Y_DIM,
-                                           float32_t POS_RES,
-                                           float32_t HDG_RES,
-                                           float32_t turnRadius)
+__device__ __host__ void turnCoord(float32_t& xout,
+                                   float32_t& yout,
+                                   float32_t xin,
+                                   float32_t yin,
+                                   float32_t theta,
+                                   float32_t turnRadius)
 {
-    float32_t actualX = static_cast<float32_t>(x - HALF_X) * POS_RES + turnRadius * sin(deg2Rad(static_cast<float32_t>(theta * HDG_RES)));
-    float32_t actualY = static_cast<float32_t>(y - HALF_Y) * POS_RES + turnRadius * (1.0f - cos(deg2Rad(static_cast<float32_t>(theta * HDG_RES))));
-    float32_t roundX  = floor((actualX / POS_RES) + 0.5f);
-    float32_t roundY  = floor((actualY / POS_RES) + 0.5f);
+    xout = xin + turnRadius * sin(deg2Rad(theta));
+    yout = yin + turnRadius * (1.f - cos(deg2Rad(theta)));
+}
+
+__device__ __host__ uint32_t turnCoord(uint32_t x,
+                                       uint32_t y,
+                                       uint32_t theta,
+                                       uint32_t X_DIM,
+                                       uint32_t Y_DIM,
+                                       float32_t POS_RES,
+                                       float32_t HDG_RES,
+                                       float32_t turnRadius)
+{
+    float32_t actualX{};
+    float32_t actualY{};
+
+    turnCoord(actualX, actualY,
+              static_cast<float32_t>(x - HALF_X) * POS_RES,
+              static_cast<float32_t>(y - HALF_Y) * POS_RES,
+              static_cast<float32_t>(theta * HDG_RES),
+              turnRadius);
+
+    float32_t roundX = floor((actualX / POS_RES) + 0.5f);
+    float32_t roundY = floor((actualY / POS_RES) + 0.5f);
 
     uint32_t newIndexX = static_cast<uint32_t>(roundX + HALF_X);
     uint32_t newIndexY = static_cast<uint32_t>(roundY + HALF_Y);
@@ -151,18 +169,18 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
     uint32_t cid = y * blockDim.x + tid;
     // printf("cid %u\n", cid);
 
-    if (tid == 0 ||
-        tid + 1 == blockDim.x ||
-        y > Y_DIM - 32 ||
-        y < 32)
-    {
-        return;
-    }
+    // if (tid == 0 ||
+    //     tid + 1 == blockDim.x ||
+    //     y > Y_DIM - 32 ||
+    //     y < 32)
+    // {
+    //     return;
+    // }
 
     uint32_t R = 0;
     for (uint32_t theta = 0; theta < 360; theta++)
     {
-        uint32_t c  = turnCoordLeft(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
+        uint32_t c  = turnCoord(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
         uint32_t F1 = bitVectorRead(Fb, c);
         uint32_t R1 = bitVectorRead(RbI, c);
 
@@ -171,25 +189,33 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
 
         // option1: perf is about 0.1 ms slower
         // than concurrent write
-        if (cid & 1)
-        {
-            bitVectorWrite(RbO, R, c);
-        }
-
-        if (!(cid & 1))
-        {
-            bitVectorWrite(RbO, R, c);
-        }
+        // if (cid & 1)
+        // {
+        //     bitVectorWrite(RbO, R, c);
+        // }
+        // __syncthreads();
+        // if (!(cid & 1))
+        // {
+        //     bitVectorWrite(RbO, R, c);
+        // }
 
         // option2: __shfl
-        // uint32_t cm = (c >> 5); // always the starting bit of a uint32_t memory
-        // uint32_t cr = (c & 31); // shift cr bits
+        uint32_t cm = (c >> 5); // always the starting bit of a uint32_t memory
+        uint32_t cr = (c & 31); // shift cr bits
 
-        // uint32_t remainder  = (R << cr);                                    // part of R that should be written in this RbO[cm]
-        // uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;               // part of R that should be written in this RbO[cm + 1]
-        // uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 8); // receive from the thread tid-1
+        uint32_t remainder  = (R << cr);                                    // part of R that should be written in this RbO[cm]
+        uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;               // part of R that should be written in this RbO[cm + 1]
+        uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 8); // receive from the thread tid-1
 
-        // bitVectorWrite(RbO, remainder + receiveVal, cm * 32);
+        if (tid == 0)
+        {
+            receiveVal = 0u; // shuffle will wrap around, i.e. land #0 will receive
+                             // lane #[warpSize - 1]
+        }
+
+        bitVectorWrite(RbO, remainder + receiveVal, cm * 32);
+
+        // option 3: naive concurrent write
         // bitVectorWrite(RbO, R, c);
     }
 }
