@@ -212,25 +212,21 @@ TEST(PaperTests, CountBits)
 
 TEST(PaperTests, Reachability)
 {
-    uint32_t *dev_reach0, *dev_reach1, *dev_reach2;
-    uint32_t *reach0, *reach1, *reach2;
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
     uint32_t* dev_fb;
 
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
-    HANDLE_ERROR(cudaMalloc((void**)&dev_reach2, SIZE));
 
     HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
     HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
-    HANDLE_ERROR(cudaMemset((void*)dev_reach2, 0, SIZE));
 
     reach0 = (uint32_t*)malloc(SIZE);
     reach1 = (uint32_t*)malloc(SIZE);
-    reach2 = (uint32_t*)malloc(SIZE);
 
     memset((void*)reach0, 0, SIZE);
     memset((void*)reach1, 0, SIZE);
-    memset((void*)reach2, 0, SIZE);
 
     HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
     HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
@@ -277,12 +273,86 @@ TEST(PaperTests, Reachability)
     // delete
     HANDLE_ERROR(cudaFree(dev_reach0));
     HANDLE_ERROR(cudaFree(dev_reach1));
-    HANDLE_ERROR(cudaFree(dev_reach2));
     HANDLE_ERROR(cudaFree(dev_fb));
 
     free(reach0);
     free(reach1);
-    free(reach2);
+}
+
+TEST(PaperTests, Obstacle)
+{
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
+    uint32_t* dev_fb;
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
+
+    HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
+
+    reach0 = (uint32_t*)malloc(SIZE);
+    reach1 = (uint32_t*)malloc(SIZE);
+
+    memset((void*)reach0, 0, SIZE);
+    memset((void*)reach1, 0, SIZE);
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
+    HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE / 2)); // set ones for half of the theta slices
+
+    // set reach0
+    uint32_t middle = turnCoord(X_DIM / 2, Y_DIM / 2, 0,
+                                X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+
+    bitVectorWrite(reach0, 4294967295, middle);
+
+    HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
+                            cudaMemcpyHostToDevice));
+
+    TIME_PRINT("sweep ",
+               bitSweepTurn(dev_reach1,
+                            dev_fb,
+                            dev_reach0,
+                            TURN_R,
+                            nullptr);
+               cudaDeviceSynchronize(););
+
+    HANDLE_ERROR(cudaGetLastError());
+
+    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
+                            cudaMemcpyDeviceToHost));
+
+    // assert bits are ON at theta = 179
+    uint32_t theta      = 179;
+    uint32_t startIndex = X_DIM * Y_DIM * theta;
+    uint32_t endIndex   = X_DIM * Y_DIM * (theta + 1);
+
+    uint32_t reachableBitCount = 0u;
+    for (uint32_t coordIndex = startIndex / 32; coordIndex < endIndex / 32; coordIndex++)
+    {
+        reachableBitCount += countBits(reach1[coordIndex]);
+    }
+    EXPECT_EQ(32, reachableBitCount);
+
+    // assert bits are OFF at theta = 180
+    theta      = 180;
+    startIndex = endIndex;
+    endIndex   = X_DIM * Y_DIM * (theta + 1);
+
+    reachableBitCount = 0u;
+    for (uint32_t coordIndex = startIndex / 32; coordIndex < endIndex / 32; coordIndex++)
+    {
+        reachableBitCount += countBits(reach1[coordIndex]);
+    }
+    EXPECT_EQ(0, reachableBitCount);
+
+    // delete
+    HANDLE_ERROR(cudaFree(dev_reach0));
+    HANDLE_ERROR(cudaFree(dev_reach1));
+    HANDLE_ERROR(cudaFree(dev_fb));
+
+    free(reach0);
+    free(reach1);
 }
 
 TEST(PaperTests, shuffle)
