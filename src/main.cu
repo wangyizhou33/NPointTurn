@@ -26,8 +26,9 @@ int main(void)
     bitVectorWrite(reach[0], 1, origin);
 
     // host to device
-    HANDLE_ERROR(cudaMemcpy(dev_reach[0], reach[0], SIZE,
-                            cudaMemcpyHostToDevice));
+    TIME_PRINT("copy h2d: ",
+               HANDLE_ERROR(cudaMemcpy(dev_reach[0], reach[0], SIZE,
+                                       cudaMemcpyHostToDevice)));
 
     TIME_PRINT("search: ",
                for (uint32_t iter = 0; iter + 2 < ITER_CNT; iter += 2) {

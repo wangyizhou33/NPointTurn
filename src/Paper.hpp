@@ -63,4 +63,6 @@ void setUp(uint32_t** dev_reach, uint32_t** reach);
 
 void tearDown(uint32_t** dev_reach, uint32_t** reach);
 
+__global__ void copy(uint32_t* dst, uint32_t* src, uint32_t N);
+
 #endif // PAPER_HPP_

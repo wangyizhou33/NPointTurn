@@ -209,16 +209,9 @@ __global__ void _bitSweepTurn(uint32_t* RbO,
         uint32_t cm = (c >> 5); // always the starting bit of a uint32_t memory
         uint32_t cr = (c & 31); // shift cr bits
 
-        uint32_t remainder  = (R << cr);                                     // part of R that should be written in this RbO[cm]
-        uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;                // part of R that should be written in this RbO[cm + 1]
-        uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 32); // receive from the thread tid-1
-
-        if (tid % cellsPerRow == 0) // beginning of a row 0, 4, 8
-                                    // e.g. 4 should not receive from 3
-        {
-            receiveVal = 0u; // shuffle will wrap around, i.e. land #0 will receive
-                             // lane #[warpSize - 1]
-        }
+        uint32_t remainder  = (R << cr);                                    // part of R that should be written in this RbO[cm]
+        uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;               // part of R that should be written in this RbO[cm + 1]
+        uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 4); // receive from the thread tid-1
 
         bitVectorWrite(RbO, remainder + receiveVal, cm * 32);
 
@@ -242,4 +235,12 @@ void bitSweepTurn(uint32_t* RbO,
                                                                                         POS_RES,
                                                                                         HDG_RES,
                                                                                         turnRadius);
+}
+
+__global__ void copy(uint32_t* dst, uint32_t* src, uint32_t N)
+{
+    uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (i < N)
+        dst[i] = src[i];
 }

@@ -385,6 +385,50 @@ TEST(PaperTests, shuffle)
     EXPECT_EQ((1 << 7), cell[0]);
 }
 
+TEST(PaperTests, SOL)
+{
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
+
+    size_t SIZE1 = 512 * SIZE;
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE1));
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE1));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE1));
+
+    reach0 = (uint32_t*)malloc(SIZE1);
+    reach1 = (uint32_t*)malloc(SIZE1);
+    memset((void*)reach0, 0, SIZE1);
+    memset((void*)reach1, 0, SIZE1);
+
+    std::cout << "mem size in bytes: " << SIZE1 << std::endl;
+
+    TIME_PRINT("copy h2d: ",
+               HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE1,
+                                       cudaMemcpyHostToDevice)));
+
+    TIME_PRINT("copy d2d: ",
+               HANDLE_ERROR(cudaMemcpy(dev_reach1, dev_reach0, SIZE1,
+                                       cudaMemcpyDeviceToDevice)));
+
+    auto copyKernel = [&]() {
+        uint32_t N          = SIZE1 / 4u;
+        uint32_t BLOCK_SIZE = 512;
+        copy<<<(N + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(dev_reach1, dev_reach0, N);
+        cudaDeviceSynchronize();
+        // HANDLE_ERROR(cudaGetLastError());
+    };
+
+    TIME_PRINT("kernel copy d2d: ", copyKernel());
+
+    HANDLE_ERROR(cudaFree(dev_reach0));
+    HANDLE_ERROR(cudaFree(dev_reach1));
+
+    free(reach0);
+    free(reach1);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
