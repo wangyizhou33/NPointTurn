@@ -31,13 +31,13 @@ int main(void)
 
     TIME_PRINT("search: ",
                for (uint32_t iter = 0; iter + 2 < ITER_CNT; iter += 2) {
-                   bitSweepLeft(dev_reach[iter + 1],
+                   bitSweepTurn(dev_reach[iter + 1],
                                 dev_fb,
                                 dev_reach[iter],
                                 TURN_R,
                                 nullptr);
 
-                   bitSweepLeft(dev_reach[iter + 2],
+                   bitSweepTurn(dev_reach[iter + 2],
                                 dev_fb,
                                 dev_reach[iter + 1],
                                 -TURN_R,

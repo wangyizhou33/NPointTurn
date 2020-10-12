@@ -53,7 +53,7 @@ __device__ __host__ uint32_t turnCoord(uint32_t x,
                                        float32_t HDG_RES,
                                        float32_t turnRadius);
 
-void bitSweepLeft(uint32_t* RbO,
+void bitSweepTurn(uint32_t* RbO,
                   const uint32_t* Fb,
                   const uint32_t* RbI,
                   float32_t turnRadius,

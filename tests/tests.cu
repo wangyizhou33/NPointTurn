@@ -245,7 +245,7 @@ TEST(PaperTests, Reachability)
                             cudaMemcpyHostToDevice));
 
     TIME_PRINT("sweep ",
-               bitSweepLeft(dev_reach1,
+               bitSweepTurn(dev_reach1,
                             dev_fb,
                             dev_reach0,
                             TURN_R,

@@ -67,7 +67,7 @@ __global__ void shuffle(uint32_t* R)
     uint32_t receive = __shfl_sync(0xffffffff, send, tid - 1, 8);
 
     // equivalently
-    // uint32_t receive = __shfl_down_sync(0xffffffff, send, 1, 8);
+    // uint32_t receive = __shfl_up_sync(0xffffffff, send, 1, 8);
     // @note: mask tends to do nothing
 
     printf("tid: %u, send: %u, receive: %u\n", tid, send, receive);
@@ -154,7 +154,7 @@ __device__ __host__ uint32_t turnCoord(uint32_t x,
     return volCoord(newIndexX, newIndexY, theta, X_DIM, Y_DIM);
 }
 
-__global__ void _bitSweepLeft(uint32_t* RbO,
+__global__ void _bitSweepTurn(uint32_t* RbO,
                               const uint32_t* Fb,
                               const uint32_t* RbI,
                               uint32_t X_DIM,
@@ -163,12 +163,18 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
                               float32_t HDG_RES,
                               float32_t turnRadius)
 {
-    uint32_t tid = threadIdx.x; // [0, 5)
-    uint32_t x   = tid * 32;
-    uint32_t y   = blockIdx.x; // [0, 160)
-    uint32_t cid = y * blockDim.x + tid;
-    // printf("cid %u\n", cid);
+    uint32_t cellsPerRow   = X_DIM / 32u;
+    uint32_t cellsPerBlock = blockDim.x;
+    uint32_t rowsPerBlock  = cellsPerBlock / cellsPerRow;
+    uint32_t tid           = threadIdx.x;                                   // [0, 4 * rowsPerBlock)
+    uint32_t x             = tid % cellsPerRow * 32u;                       // bit offset
+    uint32_t y             = blockIdx.x * rowsPerBlock + tid / cellsPerRow; // [0, 128)
+    uint32_t cid           = y * X_DIM + tid % cellsPerRow;
 
+    // print to check
+    // printf("tid %u, x %u, y %u, \n", tid, x, y);
+
+    // padding not necessary for shfl strategy
     // if (tid == 0 ||
     //     tid + 1 == blockDim.x ||
     //     y > Y_DIM - 32 ||
@@ -203,11 +209,12 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
         uint32_t cm = (c >> 5); // always the starting bit of a uint32_t memory
         uint32_t cr = (c & 31); // shift cr bits
 
-        uint32_t remainder  = (R << cr);                                    // part of R that should be written in this RbO[cm]
-        uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;               // part of R that should be written in this RbO[cm + 1]
-        uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 8); // receive from the thread tid-1
+        uint32_t remainder  = (R << cr);                                     // part of R that should be written in this RbO[cm]
+        uint32_t sendVal    = (cr != 0) ? R >> (32 - cr) : 0;                // part of R that should be written in this RbO[cm + 1]
+        uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 32); // receive from the thread tid-1
 
-        if (tid == 0)
+        if (tid % cellsPerRow == 0) // beginning of a row 0, 4, 8
+                                    // e.g. 4 should not receive from 3
         {
             receiveVal = 0u; // shuffle will wrap around, i.e. land #0 will receive
                              // lane #[warpSize - 1]
@@ -220,12 +227,19 @@ __global__ void _bitSweepLeft(uint32_t* RbO,
     }
 }
 
-void bitSweepLeft(uint32_t* RbO,
+void bitSweepTurn(uint32_t* RbO,
                   const uint32_t* Fb,
                   const uint32_t* RbI,
                   float32_t turnRadius,
                   cudaStream_t cuStream)
 {
-    constexpr uint32_t ROWS_PER_BLOCK = 1u; // 1, 2, 4, 8, 16, 32
-    _bitSweepLeft<<<Y_DIM / ROWS_PER_BLOCK, ROWS_PER_BLOCK * X_DIM / 32, 0, cuStream>>>(RbO, Fb, RbI, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
+    constexpr uint32_t ROWS_PER_BLOCK = 8u; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    _bitSweepTurn<<<Y_DIM / ROWS_PER_BLOCK, ROWS_PER_BLOCK * X_DIM / 32, 0, cuStream>>>(RbO,
+                                                                                        Fb,
+                                                                                        RbI,
+                                                                                        X_DIM,
+                                                                                        Y_DIM,
+                                                                                        POS_RES,
+                                                                                        HDG_RES,
+                                                                                        turnRadius);
 }
