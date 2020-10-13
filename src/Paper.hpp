@@ -61,6 +61,10 @@ void bitSweepTurn(uint32_t* RbO,
 
 bool testGoal(const uint32_t* R, uint32_t c);
 
+void prepareFreespace(uint32_t* Fb,
+                      uint32_t X_DIM,
+                      uint32_t Y_DIM);
+
 void setUp(uint32_t** dev_reach, uint32_t** reach);
 
 void tearDown(uint32_t** dev_reach, uint32_t** reach);

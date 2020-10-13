@@ -6,6 +6,7 @@ int main(void)
     uint32_t* dev_reach[ITER_CNT];
     uint32_t* reach[ITER_CNT];
     uint32_t* dev_fb;
+    uint32_t* fb;
 
     // setup
     for (uint32_t iter = 0; iter < ITER_CNT; ++iter)
@@ -17,8 +18,12 @@ int main(void)
         memset((void*)reach[iter], 0, SIZE);
     }
 
+    fb = (uint32_t*)malloc(SIZE);
     HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
-    HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
+
+    prepareFreespace(fb, X_DIM, Y_DIM);
+    HANDLE_ERROR(cudaMemcpy(dev_fb, fb, SIZE,
+                            cudaMemcpyHostToDevice));
 
     // set start
     uint32_t origin = turnCoord(X_DIM / 2, Y_DIM / 2, 0,

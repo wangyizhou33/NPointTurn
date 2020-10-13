@@ -244,6 +244,40 @@ bool testGoal(const uint32_t* R, uint32_t c)
     return (r & 1u);
 }
 
+void prepareFreespace(uint32_t* Fb,
+                      uint32_t X_DIM,
+                      uint32_t Y_DIM)
+{
+    uint32_t SIZE = X_DIM * Y_DIM * 360u / 32u * sizeof(uint32_t);
+    memset((void*)Fb, 2147483647, SIZE);
+
+    for (uint32_t theta = 0u; theta < 360u; ++theta)
+    {
+        auto occupyBit = [theta, X_DIM, Y_DIM, Fb](uint32_t x, uint32_t y) {
+            // bit offset
+            uint32_t b = volCoord(x, y, theta, X_DIM, Y_DIM);
+            bitVectorWrite(Fb, 4294967294u, b);
+        };
+        auto occupyCell = [theta, X_DIM, Y_DIM, Fb](uint32_t x, uint32_t y) {
+            // bit offset
+            uint32_t b = volCoord(x, y, theta, X_DIM, Y_DIM);
+            bitVectorWrite(Fb, 0u, b);
+        };
+
+        for (uint32_t y = 0; y < Y_DIM; ++y)
+        {
+            occupyBit(0, y);
+            occupyBit(X_DIM - 1, y);
+        }
+
+        for (uint32_t x = 0; x < X_DIM; x += 32u)
+        {
+            occupyCell(x, 0u);
+            occupyCell(x, Y_DIM - 1u);
+        }
+    }
+}
+
 __global__ void copy(uint32_t* dst, uint32_t* src, uint32_t N)
 {
     uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
