@@ -146,6 +146,24 @@ __device__ __host__ uint32_t turnCoord(uint32_t x,
     float32_t roundX = floor((actualX / POS_RES) + 0.5f);
     float32_t roundY = floor((actualY / POS_RES) + 0.5f);
 
+    if (roundX >= HALF_X)
+    {
+        roundX -= 2 * HALF_X;
+    }
+    else if (roundX < -HALF_X)
+    {
+        roundX += 2 * HALF_X;
+    }
+
+    if (roundY >= HALF_Y)
+    {
+        roundY -= 2 * HALF_Y;
+    }
+    else if (roundY < -HALF_Y)
+    {
+        roundY += 2 * HALF_Y;
+    }
+
     uint32_t newIndexX = static_cast<uint32_t>(roundX + HALF_X);
     uint32_t newIndexY = static_cast<uint32_t>(roundY + HALF_Y);
 
