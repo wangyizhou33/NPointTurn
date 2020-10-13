@@ -59,6 +59,8 @@ void bitSweepTurn(uint32_t* RbO,
                   float32_t turnRadius,
                   cudaStream_t cuStream = nullptr);
 
+bool testGoal(const uint32_t* R, uint32_t c);
+
 void setUp(uint32_t** dev_reach, uint32_t** reach);
 
 void tearDown(uint32_t** dev_reach, uint32_t** reach);

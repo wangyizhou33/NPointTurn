@@ -237,6 +237,13 @@ void bitSweepTurn(uint32_t* RbO,
                                                                                         turnRadius);
 }
 
+bool testGoal(const uint32_t* R, uint32_t c)
+{
+    uint32_t r = bitVectorRead(R, c);
+
+    return (r & 1u);
+}
+
 __global__ void copy(uint32_t* dst, uint32_t* src, uint32_t N)
 {
     uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;

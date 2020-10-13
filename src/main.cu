@@ -44,18 +44,18 @@ int main(void)
                                 -TURN_R,
                                 nullptr);
                } HANDLE_ERROR(cudaDeviceSynchronize()););
-    for (uint32_t iter = 0; iter + 1 < ITER_CNT; iter++)
-    {
-        // device to host
-        HANDLE_ERROR(cudaMemcpy(reach[iter], dev_reach[iter], SIZE,
-                                cudaMemcpyDeviceToHost));
+    TIME_PRINT("copy d2h",
+               for (uint32_t iter = 0; iter + 1 < ITER_CNT; iter++) {
+                   // device to host
+                   HANDLE_ERROR(cudaMemcpy(reach[iter], dev_reach[iter], SIZE,
+                                           cudaMemcpyDeviceToHost));
 
-        std::cout << "reachable bits "
-                  << iter
-                  << " "
-                  << countBitsInVolume(reach[iter])
-                  << std::endl;
-    }
+                   //    std::cout << "reachable bits "
+                   //              << iter
+                   //              << " "
+                   //              << countBitsInVolume(reach[iter])
+                   //              << std::endl;
+               });
 
     // teardown
     for (uint32_t iter = 0; iter < ITER_CNT; ++iter)

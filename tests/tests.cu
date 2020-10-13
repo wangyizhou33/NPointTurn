@@ -429,6 +429,25 @@ TEST(PaperTests, SOL)
     free(reach1);
 }
 
+TEST(PaperTests, GoalTest)
+{
+    uint32_t* reach0 = (uint32_t*)malloc(SIZE);
+
+    memset((void*)reach0, 0, SIZE);
+
+    uint32_t middle = turnCoord(X_DIM / 2, Y_DIM / 2, 0,
+                                X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
+
+    bitVectorWrite(reach0, 3, middle);
+
+    EXPECT_FALSE(testGoal(reach0, middle - 1u));
+    EXPECT_TRUE(testGoal(reach0, middle));
+    EXPECT_TRUE(testGoal(reach0, middle + 1u));
+    EXPECT_FALSE(testGoal(reach0, middle + 2u));
+
+    free(reach0);
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
