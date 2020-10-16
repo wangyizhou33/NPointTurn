@@ -109,12 +109,10 @@ TEST(PaperTests, TurnCoord1)
 
     for (uint32_t theta = 0; theta < 360; ++theta)
     {
-
         uint32_t a1 = turnCoord(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
         uint32_t a2 = turnCoord(x, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
         uint32_t a  = a2 - a1;
-
-        for (int32_t i = -X_DIM / 2; i <= X_DIM / 2; ++i)
+        for (uint32_t i = 0u; i <= 5u; ++i)
         {
             uint32_t b1 = turnCoord(x + i, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
             uint32_t b2 = turnCoord(x + i, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
@@ -123,7 +121,7 @@ TEST(PaperTests, TurnCoord1)
             EXPECT_EQ(a, b);
         }
 
-        for (int32_t i = -Y_DIM / 2; i <= Y_DIM / 2; ++i)
+        for (uint32_t i = 0u; i <= 5u; ++i)
         {
             uint32_t b1 = turnCoord(x, y + i, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
             uint32_t b2 = turnCoord(x, y + i, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
