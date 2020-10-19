@@ -3,18 +3,20 @@
 
 #include "Helper.hpp"
 
-constexpr uint32_t ITER_CNT   = 10u;
-constexpr uint32_t X_DIM      = 32u * 4u;
-constexpr uint32_t Y_DIM      = 32u * 4u;
-constexpr float32_t POS_RES   = 0.5f;
-constexpr float32_t HDG_RES   = 1.0f;
-constexpr uint32_t X_CELLS    = X_DIM / 32u;
-constexpr uint32_t Y_CELLS    = Y_DIM / 32u;
-constexpr uint32_t THETA_STEP = 360u;
-constexpr uint32_t GRID_SIZE  = X_DIM * Y_DIM * THETA_STEP;
-constexpr float32_t HALF_X    = X_DIM / 2;
-constexpr float32_t HALF_Y    = Y_DIM / 2;
-constexpr float32_t TURN_R    = 10.0f;
+constexpr uint32_t ITER_CNT  = 10u;
+constexpr uint32_t X_DIM     = 32u * 4u;
+constexpr uint32_t Y_DIM     = 32u * 4u;
+constexpr uint32_t THETA_DIM = 512u;
+constexpr uint32_t GRID_SIZE = X_DIM * Y_DIM * THETA_DIM;
+
+constexpr float32_t POS_RES = 0.5f;
+constexpr float32_t HDG_RES = 360.f / static_cast<float32_t>(THETA_DIM);
+
+constexpr float32_t HALF_X = X_DIM / 2;
+constexpr float32_t HALF_Y = Y_DIM / 2;
+
+constexpr float32_t TURN_R = 10.0f;
+
 // byte size
 constexpr size_t SIZE = GRID_SIZE / 32u * sizeof(uint32_t);
 

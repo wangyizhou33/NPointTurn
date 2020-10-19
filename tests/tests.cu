@@ -107,7 +107,7 @@ TEST(PaperTests, TurnCoord1)
     uint32_t x = X_DIM / 2;
     uint32_t y = Y_DIM / 2;
 
-    for (uint32_t theta = 0; theta < 360; ++theta)
+    for (uint32_t theta = 0; theta < THETA_DIM; ++theta)
     {
         uint32_t a1 = turnCoord(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
         uint32_t a2 = turnCoord(x, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
@@ -252,7 +252,7 @@ TEST(PaperTests, Reachability)
                             cudaMemcpyDeviceToHost));
 
     // assert each theta slice has 32 ON-bits
-    for (uint32_t theta = 0; theta < 360; ++theta)
+    for (uint32_t theta = 0; theta < THETA_DIM; ++theta)
     {
         uint32_t startIndex = X_DIM * Y_DIM * theta;
         uint32_t endIndex   = X_DIM * Y_DIM * (theta + 1);
@@ -321,7 +321,7 @@ TEST(PaperTests, Obstacle)
                             cudaMemcpyDeviceToHost));
 
     // assert bits are ON at theta = 179
-    uint32_t theta      = 179;
+    uint32_t theta      = THETA_DIM / 2u - 1u;
     uint32_t startIndex = X_DIM * Y_DIM * theta;
     uint32_t endIndex   = X_DIM * Y_DIM * (theta + 1);
 
@@ -333,7 +333,7 @@ TEST(PaperTests, Obstacle)
     EXPECT_EQ(32, reachableBitCount);
 
     // assert bits are OFF at theta = 180
-    theta      = 180;
+    theta      = THETA_DIM / 2u;
     startIndex = endIndex;
     endIndex   = X_DIM * Y_DIM * (theta + 1);
 

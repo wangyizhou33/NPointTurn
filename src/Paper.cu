@@ -15,7 +15,7 @@ uint32_t countBitsInVolume(uint32_t* vol)
 {
     uint32_t reachableBitCount = 0u;
 
-    for (uint32_t theta = 0; theta < 360; ++theta)
+    for (uint32_t theta = 0; theta < THETA_DIM; ++theta)
     {
         uint32_t startIndex = X_DIM * Y_DIM * theta;
         uint32_t endIndex   = X_DIM * Y_DIM * (theta + 1);
@@ -202,7 +202,7 @@ __global__ void _bitSweepTurn(uint32_t* RbO,
     // }
 
     uint32_t R = 0;
-    for (uint32_t theta = 0; theta < 360; theta++)
+    for (uint32_t theta = 0; theta < THETA_DIM; theta++)
     {
         uint32_t c  = turnCoord(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, turnRadius);
         uint32_t F1 = bitVectorRead(Fb, c);
@@ -266,10 +266,10 @@ void prepareFreespace(uint32_t* Fb,
                       uint32_t X_DIM,
                       uint32_t Y_DIM)
 {
-    uint32_t SIZE = X_DIM * Y_DIM * 360u / 32u * sizeof(uint32_t);
+    uint32_t SIZE = X_DIM * Y_DIM * THETA_DIM / 32u * sizeof(uint32_t);
     memset((void*)Fb, 2147483647, SIZE);
 
-    for (uint32_t theta = 0u; theta < 360u; ++theta)
+    for (uint32_t theta = 0u; theta < THETA_DIM; ++theta)
     {
         auto occupyBit = [theta, X_DIM, Y_DIM, Fb](uint32_t x, uint32_t y) {
             // bit offset
