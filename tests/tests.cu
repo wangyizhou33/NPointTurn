@@ -112,6 +112,10 @@ TEST(PaperTests, TurnCoord1)
         uint32_t a1 = turnCoord(x, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
         uint32_t a2 = turnCoord(x, y, theta + 1, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
         uint32_t a  = a2 - a1;
+
+        // use this to build the bit offset table
+        std::cout << a << "u, " << std::endl; // the last one is garbage
+
         for (uint32_t i = 0u; i <= 5u; ++i)
         {
             uint32_t b1 = turnCoord(x + i, y, theta, X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
