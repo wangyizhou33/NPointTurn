@@ -392,7 +392,7 @@ TEST(PaperTests, SOL)
     uint32_t *dev_reach0, *dev_reach1;
     uint32_t *reach0, *reach1;
 
-    size_t SIZE1 = 512 * SIZE;
+    size_t SIZE1 = SIZE;
 
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
     HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE1));

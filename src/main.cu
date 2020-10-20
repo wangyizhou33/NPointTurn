@@ -33,7 +33,8 @@ int main(void)
     // host to device
     TIME_PRINT("copy h2d: ",
                HANDLE_ERROR(cudaMemcpy(dev_reach[0], reach[0], SIZE,
-                                       cudaMemcpyHostToDevice)));
+                                       cudaMemcpyHostToDevice));
+               HANDLE_ERROR(cudaDeviceSynchronize()));
 
     TIME_PRINT("search: ",
                for (uint32_t iter = 0; iter + 2 < ITER_CNT; iter += 2) {

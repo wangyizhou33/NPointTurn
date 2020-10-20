@@ -719,6 +719,8 @@ __global__ void _bitSweepTurn(uint32_t* RbO,
 
     uint32_t R = 0;
     uint32_t c = volCoord(x, y, 0u, X_DIM, Y_DIM);
+
+#pragma unroll
     for (uint32_t theta = 0; theta < THETA_DIM; theta++)
     {
         c += dev_bitOffsets[theta];
@@ -763,7 +765,7 @@ void bitSweepTurn(uint32_t* RbO,
                   float32_t turnRadius,
                   cudaStream_t cuStream)
 {
-    constexpr uint32_t ROWS_PER_BLOCK = 8u; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr uint32_t ROWS_PER_BLOCK = 32u; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
     _bitSweepTurn<<<Y_DIM / ROWS_PER_BLOCK, ROWS_PER_BLOCK * X_DIM / 32, 0, cuStream>>>(RbO,
                                                                                         Fb,
                                                                                         RbI,
