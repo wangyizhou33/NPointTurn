@@ -591,31 +591,6 @@ __global__ void shuffle(uint32_t* R)
     R[tid] = receive;
 }
 
-__device__ __host__ uint32_t bitVectorRead(const uint32_t* RbI, uint32_t c)
-{
-    uint32_t cm = (c >> 5);
-    uint32_t cr = (c & 31);
-    uint32_t Ro = 0;
-
-    if (cr)
-        Ro = (RbI[cm] >> cr) | (RbI[cm + 1] << (32 - cr));
-    else
-        Ro = RbI[cm];
-    // printf("%u, %u\n", (RbI[cm] >> cr), (RbI[cm + 1] << (32 - cr)));
-    return Ro;
-}
-
-__device__ __host__ void bitVectorWrite(uint32_t* R, uint32_t val, uint32_t c)
-{
-    uint32_t cm = (c >> 5);
-    uint32_t cr = (c & 31);
-    R[cm]       = ((R[cm] & ((1 << cr) - 1)) | (val << cr));
-    if (cr)
-        R[cm + 1] = ((R[cm + 1] & (~((1 << cr) - 1))) | (val >> (32 - cr)));
-    // else
-    //     R[cm + 1] = R[cm + 1] & (~((1 << cr) - 1));
-}
-
 __device__ __host__ float32_t deg2Rad(float32_t deg)
 {
     return 0.0174533f * deg;
