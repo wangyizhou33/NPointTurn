@@ -732,18 +732,6 @@ __global__ void _bitSweepTurn(uint32_t* RbO,
         R &= F1;
         R |= R1;
 
-        // option1: perf is about 0.1 ms slower
-        // than concurrent write
-        // if (cid & 1)
-        // {
-        //     bitVectorWrite(RbO, R, c);
-        // }
-        // __syncthreads();
-        // if (!(cid & 1))
-        // {
-        //     bitVectorWrite(RbO, R, c);
-        // }
-
         // option2: __shfl
         uint32_t cm = (c >> 5); // always the starting bit of a uint32_t memory
         uint32_t cr = (c & 31); // shift cr bits
@@ -753,9 +741,6 @@ __global__ void _bitSweepTurn(uint32_t* RbO,
         uint32_t receiveVal = __shfl_sync(0xffffffff, sendVal, tid - 1, 4); // receive from the thread tid-1
 
         bitVectorWrite(RbO, remainder + receiveVal, cm * 32);
-
-        // option 3: naive concurrent write
-        // bitVectorWrite(RbO, R, c);
     }
 }
 

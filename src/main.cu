@@ -24,6 +24,7 @@ int main(void)
     prepareFreespace(fb, X_DIM, Y_DIM);
     HANDLE_ERROR(cudaMemcpy(dev_fb, fb, SIZE,
                             cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaDeviceSynchronize());
 
     // set start
     uint32_t origin = turnCoord(X_DIM / 2, Y_DIM / 2, 0,
@@ -31,6 +32,8 @@ int main(void)
     bitVectorWrite(reach[0], 1, origin);
 
     // host to device
+    std::cout << "mem size in bytes: " << SIZE << std::endl;
+
     TIME_PRINT("copy h2d: ",
                HANDLE_ERROR(cudaMemcpy(dev_reach[0], reach[0], SIZE,
                                        cudaMemcpyHostToDevice));

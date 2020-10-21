@@ -55,6 +55,12 @@ build_tests() {
     dkb nvcc tests/tests.cu src/Paper.cu -o test /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
 }
 
+build() {
+    format
+    dkb nvcc src/main.cu  src/Paper.cu -o main
+    dkb nvcc tests/tests.cu src/Paper.cu -o test /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
+}
+
 clean() {
     rm main && rm test
 }

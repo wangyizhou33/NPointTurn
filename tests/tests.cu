@@ -408,11 +408,13 @@ TEST(PaperTests, SOL)
 
     TIME_PRINT("copy h2d: ",
                HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE1,
-                                       cudaMemcpyHostToDevice)));
+                                       cudaMemcpyHostToDevice));
+               HANDLE_ERROR(cudaDeviceSynchronize()););
 
     TIME_PRINT("copy d2d: ",
                HANDLE_ERROR(cudaMemcpy(dev_reach1, dev_reach0, SIZE1,
-                                       cudaMemcpyDeviceToDevice)));
+                                       cudaMemcpyDeviceToDevice));
+               HANDLE_ERROR(cudaDeviceSynchronize()););
 
     auto copyKernel = [&]() {
         uint32_t N          = SIZE1 / 4u;
