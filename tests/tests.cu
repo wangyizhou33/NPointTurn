@@ -433,6 +433,72 @@ TEST(PaperTests, SOL)
     free(reach1);
 }
 
+TEST(PaperTests, SOL1)
+{
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
+
+    size_t SIZE1 = SIZE;
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE1));
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE1));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE1));
+
+    reach0 = (uint32_t*)malloc(SIZE1);
+    reach1 = (uint32_t*)malloc(SIZE1);
+    memset((void*)reach0, 0, SIZE1);
+    memset((void*)reach1, 0, SIZE1);
+
+    std::cout << "mem size in bytes: " << SIZE1 << std::endl;
+
+    cudaEvent_t startEvent, stopEvent;
+    float ms{};
+
+    HANDLE_ERROR(cudaEventCreate(&startEvent));
+    HANDLE_ERROR(cudaEventCreate(&stopEvent));
+
+    HANDLE_ERROR(cudaEventRecord(startEvent, 0));
+    HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE1,
+                            cudaMemcpyHostToDevice));
+
+    HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
+    HANDLE_ERROR(cudaEventSynchronize(stopEvent));
+
+    HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
+    std::cout << "copy h2d: " << ms << " ms" << std::endl;
+
+    HANDLE_ERROR(cudaEventRecord(startEvent, 0));
+    HANDLE_ERROR(cudaMemcpy(dev_reach1, dev_reach0, SIZE1,
+                            cudaMemcpyDeviceToDevice));
+    HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
+    HANDLE_ERROR(cudaEventSynchronize(stopEvent));
+    HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
+    std::cout << "copy d2d: " << ms << " ms" << std::endl;
+
+    auto copyKernel = [&]() {
+        uint32_t N          = SIZE1 / 4u;
+        uint32_t BLOCK_SIZE = 512;
+        copy<<<(N + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(dev_reach1, dev_reach0, N);
+        cudaDeviceSynchronize();
+        // HANDLE_ERROR(cudaGetLastError());
+    };
+
+    HANDLE_ERROR(cudaEventRecord(startEvent, 0));
+    copyKernel();
+    HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
+    HANDLE_ERROR(cudaEventSynchronize(stopEvent));
+    HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
+
+    std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
+
+    HANDLE_ERROR(cudaEventDestroy(startEvent));
+    HANDLE_ERROR(cudaEventDestroy(stopEvent));
+
+    free(reach0);
+    free(reach1);
+}
+
 TEST(PaperTests, GoalTest)
 {
     uint32_t* reach0 = (uint32_t*)malloc(SIZE);
