@@ -241,6 +241,7 @@ TEST(PaperTests, Reachability)
 
     HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
                             cudaMemcpyHostToDevice));
+    cudaDeviceSynchronize();
 
     TIME_PRINT("sweep ",
                bitSweepTurn(dev_reach1,

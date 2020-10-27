@@ -83,6 +83,12 @@ void bitSweepTurn(uint32_t* RbO,
                   float32_t turnRadius,
                   cudaStream_t cuStream = nullptr);
 
+void newSweepTurn(uint32_t* RbO,
+                  const uint32_t* Fb,
+                  const uint32_t* RbI,
+                  float32_t turnRadius,
+                  cudaStream_t cuStream = nullptr);
+
 bool testGoal(const uint32_t* R, uint32_t c);
 
 void prepareFreespace(uint32_t* Fb,

@@ -736,6 +736,53 @@ void bitSweepTurn(uint32_t* RbO,
                                                                                         turnRadius);
 }
 
+__global__ void _newSweepTurn(uint32_t* RbO,
+                              const uint32_t* Fb,
+                              const uint32_t* RbI,
+                              uint32_t X_DIM,
+                              uint32_t Y_DIM,
+                              float32_t POS_RES,
+                              float32_t HDG_RES,
+                              float32_t turnRadius)
+{
+    uint32_t i = threadIdx.x + blockIdx.x * blockDim.x;
+
+    // 0.11 ms
+    uint32_t R = 0u;
+
+#pragma unroll
+    for (uint32_t theta = 0; theta < THETA_DIM; theta++)
+    {
+        R &= Fb[i];
+        R |= RbI[i];
+        RbO[i] = R;
+
+        // 0.10 ms
+        // RbO[i] = RbI[i];
+        i += 512u;
+    }
+
+    // SOL: 0.012 ms
+    // RbO[i] = RbI[i];
+}
+
+void newSweepTurn(uint32_t* RbO,
+                  const uint32_t* Fb,
+                  const uint32_t* RbI,
+                  float32_t turnRadius,
+                  cudaStream_t cuStream)
+{
+    constexpr uint32_t ROWS_PER_BLOCK = 64u; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    _newSweepTurn<<<Y_DIM / ROWS_PER_BLOCK, ROWS_PER_BLOCK * X_DIM / 32, 0, cuStream>>>(RbO,
+                                                                                        Fb,
+                                                                                        RbI,
+                                                                                        X_DIM,
+                                                                                        Y_DIM,
+                                                                                        POS_RES,
+                                                                                        HDG_RES,
+                                                                                        turnRadius);
+}
+
 bool testGoal(const uint32_t* R, uint32_t c)
 {
     uint32_t r = bitVectorRead(R, c);
