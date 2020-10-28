@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "../src/Paper.hpp"
 #include <array>
+#include <string>
 
 TEST(PaperTests, BitVectorRead)
 {
@@ -143,18 +144,88 @@ TEST(PaperTests, TurnCoord2)
     float32_t y{0.f};
     float32_t tol = 1e-4f;
 
-    for (float32_t theta = 0.f; theta <= 360.f; theta += 1.0f)
+    int32_t xprev{0};
+    int32_t yprev{0};
+
+    std::string left       = "R = (R >> 1) | __shfl_sync(0xFFFFFFFF, R << 31, threadIdx.x + 1, 4);\n";
+    std::string right      = "R = (R << 1) | __shfl_sync(0xFFFFFFFF, R >> 31, threadIdx.x - 1, 4);\n";
+    std::string up         = "i = ((i & 0xFFFFFE00) | ((i + 4) & 511));\n";
+    std::string down       = "i = ((i & 0xFFFFFE00) | ((i - 4) & 511));\n";
+    std::string shiftTheta = "i += 512u;\n";
+    std::string read       = "R &= Fb[i];\nR |= RbI[i];\n";
+    std::string write      = "RbO[i] = R;\n";
+
+    auto comment = [](uint32_t i) {
+        return "// theta : " + std::to_string(i) + "\n";
+    };
+
+    std::string code{};
+    bool genCode{true};
+
+    if (genCode)
+    {
+        code += "<<<<<< start of auto codegen\n";
+        code += "uint32_t R = 0u;\n\n";
+        code += comment(0u);
+        code += read;
+        code += write;
+        code += shiftTheta;
+        code += "\n";
+    }
+
+    for (uint32_t i = 1; i < THETA_DIM; ++i)
     {
         float32_t xout{};
         float32_t yout{};
+        float32_t theta{static_cast<float32_t>(i) * HDG_RES};
+
+        // center of the trajectory is (0, -TURN_R)
+        turnCoord(xout, yout, x, y, theta, -TURN_R);
+        EXPECT_NEAR(TURN_R * TURN_R, xout * xout + (yout + TURN_R) * (yout + TURN_R), tol);
 
         // center of the trajectory is (0, TURN_R)
         turnCoord(xout, yout, x, y, theta, TURN_R);
         EXPECT_NEAR(TURN_R * TURN_R, xout * xout + (yout - TURN_R) * (yout - TURN_R), tol);
 
-        // center of the trajectory is (0, -TURN_R)
-        turnCoord(xout, yout, x, y, theta, -TURN_R);
-        EXPECT_NEAR(TURN_R * TURN_R, xout * xout + (yout + TURN_R) * (yout + TURN_R), tol);
+        int32_t xround = static_cast<int32_t>(floor((xout / POS_RES) + 0.5f));
+        int32_t yround = static_cast<int32_t>(floor((yout / POS_RES) + 0.5f));
+
+        int32_t xdiff = xround - xprev;
+        int32_t ydiff = yround - yprev;
+
+        // std::cerr << "theta " << i
+        //           << " xdiff " << xdiff
+        //           << " ydiff " << ydiff << std::endl;
+
+        xprev = xround;
+        yprev = yround;
+
+        if (genCode)
+        {
+            // read
+            code += comment(i);
+            code += read;
+
+            if (xdiff == 1)
+                code += left;
+            else if (xdiff == -1)
+                code += right;
+
+            if (ydiff == 1)
+                code += up;
+            else if (ydiff == -1)
+                code += down;
+
+            code += write;
+            code += shiftTheta;
+            code += "\n";
+        }
+    }
+
+    if (genCode)
+    {
+        code += ">>>>>> end of auto codegen\n";
+        std::cout << code;
     }
 }
 
@@ -237,14 +308,16 @@ TEST(PaperTests, Reachability)
     uint32_t middle = turnCoord(X_DIM / 2, Y_DIM / 2, 0,
                                 X_DIM, Y_DIM, POS_RES, HDG_RES, TURN_R);
 
-    bitVectorWrite(reach0, 4294967295, middle);
+    bitVectorWrite(reach0, 4294967295u, middle);
+
+    // std::cerr << reach0[4 * 64] << " " << reach0[4 * 64 + 1] << " " << reach0[4 * 64 + 2] << " " << reach0[4 * 6 + 3] << std::endl;
 
     HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
                             cudaMemcpyHostToDevice));
     cudaDeviceSynchronize();
 
     TIME_PRINT("sweep ",
-               bitSweepTurn(dev_reach1,
+               newSweepTurn(dev_reach1,
                             dev_fb,
                             dev_reach0,
                             TURN_R,
@@ -255,6 +328,9 @@ TEST(PaperTests, Reachability)
 
     HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
                             cudaMemcpyDeviceToHost));
+
+    // std::cerr << reach1[4 * 64] << " " << reach1[4 * 64 + 1] << " " << reach1[4 * 64 + 2] << " " << reach1[4 * 64 + 3] << std::endl;
+    // std::cerr << reach1[4 * 63] << " " << reach1[4 * 63 + 1] << " " << reach1[4 * 63 + 2] << " " << reach1[4 * 63 + 3] << std::endl;
 
     // assert each theta slice has 32 ON-bits
     for (uint32_t theta = 0; theta < THETA_DIM; ++theta)
