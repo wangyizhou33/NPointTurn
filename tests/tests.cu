@@ -554,9 +554,9 @@ TEST(PaperTests, SOL1)
     std::cout << "copy d2d: " << ms << " ms" << std::endl;
 
     auto copyKernel = [&]() {
-        uint32_t N          = SIZE1 / 4u;
+        uint32_t N          = SIZE1 / 4;
         uint32_t BLOCK_SIZE = 512;
-        copy<<<(N + BLOCK_SIZE - 1) / BLOCK_SIZE, BLOCK_SIZE>>>(dev_reach1, dev_reach0, N);
+        copy<<<(N + BLOCK_SIZE - 1) / BLOCK_SIZE / 512, BLOCK_SIZE>>>(dev_reach1, dev_reach0, N);
         cudaDeviceSynchronize();
         // HANDLE_ERROR(cudaGetLastError());
     };

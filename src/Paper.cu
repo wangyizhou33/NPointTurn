@@ -4073,10 +4073,13 @@ void prepareFreespace(uint32_t* Fb,
     }
 }
 
-__global__ void copy(uint32_t* dst, uint32_t* src, uint32_t N)
+__global__ void copy(uint32_t* dst, const uint32_t* src, uint32_t N)
 {
     uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (i < N)
+    while (i < N)
+    {
         dst[i] = src[i];
+        i += gridDim.x * blockDim.x;
+    }
 }
