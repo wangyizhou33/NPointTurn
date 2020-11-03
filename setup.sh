@@ -6,14 +6,17 @@ build_tool="make"
 docker_image="n-point-turn"
 
 #  "docker build"
+# -privileged needed because of access NVIDIA GPU 
+# Performance Counters on the target device_* error
 dkb() {
     echo "running dkb ..."
 
     CMD="docker run -it --rm\
-        --gpus all
+        --gpus all \
+        --privileged \
         -v ${HOME}/.Xauthority:/home/user/.Xauthority \
         -v $PROJECT_SOURCE_DIR:$PROJECT_SOURCE_DIR \
-        -w `realpath $PWD` -u $(id -u):$(id -g)\
+        -w `realpath $PWD` \
         -e DISPLAY \
         --net=host \
         $docker_image \

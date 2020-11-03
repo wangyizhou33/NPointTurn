@@ -4077,9 +4077,17 @@ __global__ void copy(uint32_t* dst, const uint32_t* src, uint32_t N)
 {
     uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
+    // while loop implementation
     while (i < N)
     {
         dst[i] = src[i];
         i += gridDim.x * blockDim.x;
     }
+
+    // for loop implementation
+    // #pragma unroll
+    //     for (uint32_t j = 0; j < 2; ++j)
+    //     {
+    //         dst[i + j * gridDim.x * blockDim.x] = src[i + j * gridDim.x * blockDim.x];
+    //     }
 }
