@@ -1,0 +1,192 @@
+while loop
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 22:35:18, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.85
+    SM Frequency                                                             cycle/nsecond                           1.34
+    Elapsed Cycles                                                                   cycle                         235166
+    Memory [%]                                                                           %                           1.09
+    SOL DRAM                                                                             %                           1.09
+    Duration                                                                       usecond                         175.20
+    SOL L1/TEX Cache                                                                     %                           2.17
+    SOL L2 Cache                                                                         %                           0.69
+    SM Active Cycles                                                                 cycle                       26987.91
+    SM [%]                                                                               %                           0.21
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel grid is too small to fill the available resources on this device. Look at Launch Statistics for   
+          more details.                                                                                                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         64
+    Grid Size                                                                                                           8
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                            512
+    Waves Per SM                                                                                                     0.01
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   The grid for this launch is configured to execute only 8 blocks, which is less than the GPU's 68              
+          multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
+          concurrently with other workloads, consider reducing the block size to have at least one block per            
+          multiprocessor or increase the size of the grid to fully utilize the available hardware resources.            
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             64
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             16
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                           6.25
+    Achieved Active Warps Per SM                                                      warp                           2.00
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+Pragma for
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 22:43:01, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.80
+    SM Frequency                                                             cycle/nsecond                           1.35
+    Elapsed Cycles                                                                   cycle                         226018
+    Memory [%]                                                                           %                           1.01
+    SOL DRAM                                                                             %                           1.01
+    Duration                                                                       usecond                         166.82
+    SOL L1/TEX Cache                                                                     %                           2.37
+    SOL L2 Cache                                                                         %                           0.90
+    SM Active Cycles                                                                 cycle                       25863.34
+    SM [%]                                                                               %                           0.21
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel grid is too small to fill the available resources on this device. Look at Launch Statistics for   
+          more details.                                                                                                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         64
+    Grid Size                                                                                                           8
+    Registers Per Thread                                                   register/thread                             28
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                            512
+    Waves Per SM                                                                                                     0.01
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   The grid for this launch is configured to execute only 8 blocks, which is less than the GPU's 68              
+          multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
+          concurrently with other workloads, consider reducing the block size to have at least one block per            
+          multiprocessor or increase the size of the grid to fully utilize the available hardware resources.            
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             32
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             16
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                           6.25
+    Achieved Active Warps Per SM                                                      warp                           2.00
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+Pragma for version 2
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 22:47:08, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.72
+    SM Frequency                                                             cycle/nsecond                           1.33
+    Elapsed Cycles                                                                   cycle                          91354
+    Memory [%]                                                                           %                          14.59
+    SOL DRAM                                                                             %                           2.47
+    Duration                                                                       usecond                          68.26
+    SOL L1/TEX Cache                                                                     %                          77.06
+    SOL L2 Cache                                                                         %                          14.59
+    SM Active Cycles                                                                 cycle                       10375.03
+    SM [%]                                                                               %                           1.06
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel grid is too small to fill the available resources on this device. Look at Launch Statistics for   
+          more details.                                                                                                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         64
+    Grid Size                                                                                                           8
+    Registers Per Thread                                                   register/thread                             28
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                            512
+    Waves Per SM                                                                                                     0.01
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   The grid for this launch is configured to execute only 8 blocks, which is less than the GPU's 68              
+          multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
+          concurrently with other workloads, consider reducing the block size to have at least one block per            
+          multiprocessor or increase the size of the grid to fully utilize the available hardware resources.            
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             32
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             16
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                           6.23
+    Achieved Active Warps Per SM                                                      warp                           1.99
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+Manual unrolling
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 23:33:12, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.77
+    SM Frequency                                                             cycle/nsecond                           1.39
+    Elapsed Cycles                                                                   cycle                         229655
+    Memory [%]                                                                           %                           1.68
+    SOL DRAM                                                                             %                           1.68
+    Duration                                                                       usecond                         165.12
+    SOL L1/TEX Cache                                                                     %                           2.39
+    SOL L2 Cache                                                                         %                           0.71
+    SM Active Cycles                                                                 cycle                       25938.16
+    SM [%]                                                                               %                           0.21
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel grid is too small to fill the available resources on this device. Look at Launch Statistics for   
+          more details.                                                                                                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         64
+    Grid Size                                                                                                           8
+    Registers Per Thread                                                   register/thread                             28
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                            512
+    Waves Per SM                                                                                                     0.01
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   The grid for this launch is configured to execute only 8 blocks, which is less than the GPU's 68              
+          multiprocessors. This can underutilize some multiprocessors. If you do not intend to execute this kernel      
+          concurrently with other workloads, consider reducing the block size to have at least one block per            
+          multiprocessor or increase the size of the grid to fully utilize the available hardware resources.            
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             32
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             16
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                           6.25
+    Achieved Active Warps Per SM                                                      warp                           2.00
+    ---------------------------------------------------------------------- --------------- ------------------------------
+

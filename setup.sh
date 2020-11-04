@@ -6,7 +6,7 @@ build_tool="make"
 docker_image="n-point-turn"
 
 #  "docker build"
-# -privileged needed because of access NVIDIA GPU 
+# --privileged needed because of access NVIDIA GPU 
 # Performance Counters on the target device_* error
 dkb() {
     echo "running dkb ..."
@@ -45,17 +45,15 @@ cib() {
 }
 
 format() {
-    dkb clang-format -i src/* tests/*
+    cib clang-format -i src/* tests/*
 }
 
 build_main() {
-    format
-    dkb nvcc src/main.cu  src/Paper.cu -o main
+    cib nvcc src/main.cu  src/Paper.cu -o main
 }
 
 build_tests() {
-    format
-    dkb nvcc tests/tests.cu src/Paper.cu -o test /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
+    cib nvcc tests/tests.cu src/Paper.cu -o test /usr/lib/libgtest.a /usr/lib/libgtest_main.a -lpthread
 }
 
 build() {

@@ -515,7 +515,8 @@ TEST(PaperTests, SOL1)
     uint32_t *dev_reach0, *dev_reach1;
     uint32_t *reach0, *reach1;
 
-    size_t SIZE1 = SIZE;
+    size_t SIZE1 = SIZE;                     // byte size
+    uint32_t N   = SIZE1 / sizeof(uint32_t); // size of uint32_t[]
 
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
     HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE1));
@@ -553,33 +554,43 @@ TEST(PaperTests, SOL1)
     HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
     std::cout << "copy d2d: " << ms << " ms" << std::endl;
 
-    auto copyKernel = [&]() {
-        uint32_t N             = SIZE1 / 4;
-        uint32_t BLOCK_SIZE    = 512;
-        uint32_t UNROLL_FACTOR = 2;
-
-        uint32_t GRID_DIM = (N + BLOCK_SIZE - 1) / BLOCK_SIZE / UNROLL_FACTOR;
+    auto copyKernel = [&](uint32_t blockSize, uint32_t unrollFactor) {
+        uint32_t gridSize = (N + blockSize - 1) / blockSize / unrollFactor;
 
         std::cout << "<<< "
-                  << GRID_DIM
+                  << gridSize
                   << " , "
-                  << BLOCK_SIZE
-                  << ">>>"
+                  << blockSize
+                  << ">>> "
+                  << unrollFactor
                   << std::endl;
 
-        copy<<<GRID_DIM, BLOCK_SIZE>>>(dev_reach1, dev_reach0, N);
+        copy<<<gridSize, blockSize>>>(dev_reach1, dev_reach0, N);
         cudaDeviceSynchronize();
     };
-    // warm up
-    copyKernel();
 
+    uint32_t unrollFactors[]{1u, 2u, 4u, 8u, 16u, 32u, 64u, 128u, 256u, 512u};
+    uint32_t blockSizes[]{8u, 16u, 32u, 64u, 128u, 256u, 512u, 1024u};
+
+    // warm up
+    copyKernel(blockSizes[0], 512u);
+
+    // for (uint32_t blockSize : blockSizes)
+    // {
+    uint32_t blockSize = 64u;
+    // for (uint32_t unrollFactor : unrollFactors)
+    // {
+
+    uint32_t unrollFactor = 512u;
     HANDLE_ERROR(cudaEventRecord(startEvent, 0));
-    copyKernel();
+    copyKernel(blockSize, unrollFactor);
     HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
     HANDLE_ERROR(cudaEventSynchronize(stopEvent));
     HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
 
     std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
+    // }
+    // }
 
     HANDLE_ERROR(cudaEventDestroy(startEvent));
     HANDLE_ERROR(cudaEventDestroy(stopEvent));

@@ -1,0 +1,450 @@
+running dkb ...
+docker run -it --rm --gpus all --privileged -v /home/yizhouw/.Xauthority:/home/user/.Xauthority -v /home/yizhouw/Repositories/NPointTurn:/home/yizhouw/Repositories/NPointTurn -w /home/yizhouw/Repositories/NPointTurn -e DISPLAY --net=host n-point-turn bash -c "ncu --page=details ./test --gtest_filter=*SOL1"
+[0;33mNote: Google Test filter = *SOL1
+[m[0;32m[==========] [mRunning 1 test from 1 test case.
+[0;32m[----------] [mGlobal test environment set-up.
+[0;32m[----------] [m1 test from PaperTests
+[0;32m[ RUN      ] [mPaperTests.SOL1
+==PROF== Connected to process 17 (/home/yizhouw/Repositories/NPointTurn/test)
+mem size in bytes: 1073741824
+copy h2d: 113.958 ms
+copy d2d: 4.0481 ms
+<<< 33554432 , 8>>> 1
+==PROF== Profiling "copy" - 1: 0%....50%....100% - 8 passes
+<<< 33554432 , 8>>> 1
+==PROF== Profiling "copy" - 2: 0%....50%....100% - 8 passes
+kernel copy d2d: 469.142 ms
+<<< 16777216 , 16>>> 1
+==PROF== Profiling "copy" - 3: 0%....50%....100% - 8 passes
+kernel copy d2d: 366.78 ms
+<<< 8388608 , 32>>> 1
+==PROF== Profiling "copy" - 4: 0%....50%....100% - 8 passes
+kernel copy d2d: 301.653 ms
+<<< 4194304 , 64>>> 1
+==PROF== Profiling "copy" - 5: 0%....50%....100% - 8 passes
+kernel copy d2d: 277.22 ms
+<<< 2097152 , 128>>> 1
+==PROF== Profiling "copy" - 6: 0%....50%....100% - 8 passes
+kernel copy d2d: 277.435 ms
+<<< 1048576 , 256>>> 1
+==PROF== Profiling "copy" - 7: 0%....50%....100% - 8 passes
+kernel copy d2d: 284.738 ms
+<<< 524288 , 512>>> 1
+==PROF== Profiling "copy" - 8: 0%....50%....100% - 8 passes
+kernel copy d2d: 275.471 ms
+<<< 262144 , 1024>>> 1
+==PROF== Profiling "copy" - 9: 0%....50%....100% - 8 passes
+kernel copy d2d: 275.387 ms
+[0;32m[       OK ] [mPaperTests.SOL1 (5558 ms)
+[0;32m[----------] [m1 test from PaperTests (5558 ms total)
+
+[0;32m[----------] [mGlobal test environment tear-down
+[0;32m[==========] [m1 test from 1 test case ran. (5558 ms total)
+[0;32m[  PASSED  ] [m1 test.
+==PROF== Disconnected from process 17
+[17] test@127.0.0.1
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:04, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.72
+    SM Frequency                                                             cycle/nsecond                           1.35
+    Elapsed Cycles                                                                   cycle                       37324483
+    Memory [%]                                                                           %                          12.08
+    SOL DRAM                                                                             %                          12.08
+    Duration                                                                       msecond                          27.64
+    SOL L1/TEX Cache                                                                     %                          11.11
+    SOL L2 Cache                                                                         %                           4.36
+    SM Active Cycles                                                                 cycle                    26659725.50
+    SM [%]                                                                               %                           7.94
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel exhibits low compute throughput and memory bandwidth utilization relative to the peak performance 
+          of this device. Achieved compute throughput and/or memory bandwidth below 60.0% of peak typically indicate    
+          latency issues. Look at Scheduler Statistics and Warp State Statistics for potential reasons.                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                          8
+    Grid Size                                                                                                    33554432
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                 30840.47
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   Threads are executed in groups of 32 threads called warps. This kernel launch is configured to execute 8      
+          threads per block. Consequently, some threads in a warp are masked off and those hardware resources are       
+          unused. Try changing the number of threads per block to be a multiple of 32 threads. Between 128 and 256      
+          threads per block is a good initial range for experimentation. Use smaller thread blocks rather than one      
+          large thread block per multiprocessor if latency affects performance. This is particularly beneficial to      
+          kernels that frequently call __syncthreads().                                                                 
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                            128
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             32
+    Theoretical Active Warps per SM                                                   warp                             16
+    Theoretical Occupancy                                                                %                             50
+    Achieved Occupancy                                                                   %                          31.40
+    Achieved Active Warps Per SM                                                      warp                          10.05
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:04, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.75
+    SM Frequency                                                             cycle/nsecond                           1.35
+    Elapsed Cycles                                                                   cycle                       37306836
+    Memory [%]                                                                           %                          12.12
+    SOL DRAM                                                                             %                          12.12
+    Duration                                                                       msecond                          27.54
+    SOL L1/TEX Cache                                                                     %                          11.10
+    SOL L2 Cache                                                                         %                           4.34
+    SM Active Cycles                                                                 cycle                    26663078.74
+    SM [%]                                                                               %                           7.94
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel exhibits low compute throughput and memory bandwidth utilization relative to the peak performance 
+          of this device. Achieved compute throughput and/or memory bandwidth below 60.0% of peak typically indicate    
+          latency issues. Look at Scheduler Statistics and Warp State Statistics for potential reasons.                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                          8
+    Grid Size                                                                                                    33554432
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                 30840.47
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   Threads are executed in groups of 32 threads called warps. This kernel launch is configured to execute 8      
+          threads per block. Consequently, some threads in a warp are masked off and those hardware resources are       
+          unused. Try changing the number of threads per block to be a multiple of 32 threads. Between 128 and 256      
+          threads per block is a good initial range for experimentation. Use smaller thread blocks rather than one      
+          large thread block per multiprocessor if latency affects performance. This is particularly beneficial to      
+          kernels that frequently call __syncthreads().                                                                 
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                            128
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             32
+    Theoretical Active Warps per SM                                                   warp                             16
+    Theoretical Occupancy                                                                %                             50
+    Achieved Occupancy                                                                   %                          31.40
+    Achieved Active Warps Per SM                                                      warp                          10.05
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:05, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.73
+    SM Frequency                                                             cycle/nsecond                           1.35
+    Elapsed Cycles                                                                   cycle                       19878748
+    Memory [%]                                                                           %                          22.67
+    SOL DRAM                                                                             %                          22.67
+    Duration                                                                       msecond                          14.70
+    SOL L1/TEX Cache                                                                     %                          10.33
+    SOL L2 Cache                                                                         %                           8.15
+    SM Active Cycles                                                                 cycle                    14333906.69
+    SM [%]                                                                               %                           7.45
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel exhibits low compute throughput and memory bandwidth utilization relative to the peak performance 
+          of this device. Achieved compute throughput and/or memory bandwidth below 60.0% of peak typically indicate    
+          latency issues. Look at Scheduler Statistics and Warp State Statistics for potential reasons.                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         16
+    Grid Size                                                                                                    16777216
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                 15420.24
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   Threads are executed in groups of 32 threads called warps. This kernel launch is configured to execute 16     
+          threads per block. Consequently, some threads in a warp are masked off and those hardware resources are       
+          unused. Try changing the number of threads per block to be a multiple of 32 threads. Between 128 and 256      
+          threads per block is a good initial range for experimentation. Use smaller thread blocks rather than one      
+          large thread block per multiprocessor if latency affects performance. This is particularly beneficial to      
+          kernels that frequently call __syncthreads().                                                                 
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                            128
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             32
+    Theoretical Active Warps per SM                                                   warp                             16
+    Theoretical Occupancy                                                                %                             50
+    Achieved Occupancy                                                                   %                          33.61
+    Achieved Active Warps Per SM                                                      warp                          10.76
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:05, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.73
+    SM Frequency                                                             cycle/nsecond                           1.35
+    Elapsed Cycles                                                                   cycle                       10239006
+    Memory [%]                                                                           %                          43.98
+    SOL DRAM                                                                             %                          43.98
+    Duration                                                                       msecond                           7.57
+    SOL L1/TEX Cache                                                                     %                          11.88
+    SOL L2 Cache                                                                         %                          15.77
+    SM Active Cycles                                                                 cycle                     8266655.90
+    SM [%]                                                                               %                           7.23
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    WRN   This kernel exhibits low compute throughput and memory bandwidth utilization relative to the peak performance 
+          of this device. Achieved compute throughput and/or memory bandwidth below 60.0% of peak typically indicate    
+          latency issues. Look at Scheduler Statistics and Warp State Statistics for potential reasons.                 
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         32
+    Grid Size                                                                                                     8388608
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                  7710.12
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                            128
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             32
+    Theoretical Active Warps per SM                                                   warp                             16
+    Theoretical Occupancy                                                                %                             50
+    Achieved Occupancy                                                                   %                          33.28
+    Achieved Active Warps Per SM                                                      warp                          10.65
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:05, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.74
+    SM Frequency                                                             cycle/nsecond                           1.38
+    Elapsed Cycles                                                                   cycle                        5459834
+    Memory [%]                                                                           %                          84.04
+    SOL DRAM                                                                             %                          84.04
+    Duration                                                                       msecond                           3.96
+    SOL L1/TEX Cache                                                                     %                          20.61
+    SOL L2 Cache                                                                         %                          29.56
+    SM Active Cycles                                                                 cycle                     5339599.85
+    SM [%]                                                                               %                          13.57
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    OK    The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To   
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.      
+          Start by analyzing workloads in the Memory Workload Analysis section.                                         
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                         64
+    Grid Size                                                                                                     4194304
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                  3855.06
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             64
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                             16
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                          76.38
+    Achieved Active Warps Per SM                                                      warp                          24.44
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:05, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.79
+    SM Frequency                                                             cycle/nsecond                           1.36
+    Elapsed Cycles                                                                   cycle                        5354400
+    Memory [%]                                                                           %                          83.83
+    SOL DRAM                                                                             %                          83.83
+    Duration                                                                       msecond                           3.92
+    SOL L1/TEX Cache                                                                     %                          20.93
+    SOL L2 Cache                                                                         %                          30.14
+    SM Active Cycles                                                                 cycle                     5367919.76
+    SM [%]                                                                               %                          13.84
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    OK    The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To   
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.      
+          Start by analyzing workloads in the Memory Workload Analysis section.                                         
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                        128
+    Grid Size                                                                                                     2097152
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                  3855.06
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             32
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                              8
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                          83.36
+    Achieved Active Warps Per SM                                                      warp                          26.68
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:06, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.79
+    SM Frequency                                                             cycle/nsecond                           1.36
+    Elapsed Cycles                                                                   cycle                        5354613
+    Memory [%]                                                                           %                          83.85
+    SOL DRAM                                                                             %                          83.85
+    Duration                                                                       msecond                           3.92
+    SOL L1/TEX Cache                                                                     %                          20.93
+    SOL L2 Cache                                                                         %                          30.14
+    SM Active Cycles                                                                 cycle                     5227005.87
+    SM [%]                                                                               %                          13.84
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    OK    The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To   
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.      
+          Start by analyzing workloads in the Memory Workload Analysis section.                                         
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                        256
+    Grid Size                                                                                                     1048576
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                  3855.06
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                             16
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                              4
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                          83.86
+    Achieved Active Warps Per SM                                                      warp                          26.84
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:06, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.79
+    SM Frequency                                                             cycle/nsecond                           1.36
+    Elapsed Cycles                                                                   cycle                        5357301
+    Memory [%]                                                                           %                          83.80
+    SOL DRAM                                                                             %                          83.80
+    Duration                                                                       msecond                           3.92
+    SOL L1/TEX Cache                                                                     %                          20.85
+    SOL L2 Cache                                                                         %                          30.13
+    SM Active Cycles                                                                 cycle                     5098645.38
+    SM [%]                                                                               %                          13.83
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    OK    The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To   
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.      
+          Start by analyzing workloads in the Memory Workload Analysis section.                                         
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                        512
+    Grid Size                                                                                                      524288
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                  3855.06
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                              8
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                              2
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                          83.37
+    Achieved Active Warps Per SM                                                      warp                          26.68
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+  copy(unsigned int*, unsigned int const*, unsigned int), 2020-Nov-04 20:06:06, Context 1, Stream 7
+    Section: GPU Speed Of Light
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    DRAM Frequency                                                           cycle/nsecond                           6.75
+    SM Frequency                                                             cycle/nsecond                           1.36
+    Elapsed Cycles                                                                   cycle                        5417281
+    Memory [%]                                                                           %                          83.78
+    SOL DRAM                                                                             %                          83.78
+    Duration                                                                       msecond                           3.97
+    SOL L1/TEX Cache                                                                     %                          20.52
+    SOL L2 Cache                                                                         %                          29.80
+    SM Active Cycles                                                                 cycle                     4561517.47
+    SM [%]                                                                               %                          13.68
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    OK    The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To   
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.      
+          Start by analyzing workloads in the Memory Workload Analysis section.                                         
+
+    Section: Launch Statistics
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Size                                                                                                       1024
+    Grid Size                                                                                                      262144
+    Registers Per Thread                                                   register/thread                             16
+    Shared Memory Configuration Size                                                 Kbyte                          32.77
+    Driver Shared Memory Per Block                                              byte/block                              0
+    Dynamic Shared Memory Per Block                                             byte/block                              0
+    Static Shared Memory Per Block                                              byte/block                              0
+    Threads                                                                         thread                      268435456
+    Waves Per SM                                                                                                  3855.06
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
+    Section: Occupancy
+    ---------------------------------------------------------------------- --------------- ------------------------------
+    Block Limit SM                                                                   block                             16
+    Block Limit Registers                                                            block                              4
+    Block Limit Shared Mem                                                           block                             16
+    Block Limit Warps                                                                block                              1
+    Theoretical Active Warps per SM                                                   warp                             32
+    Theoretical Occupancy                                                                %                            100
+    Achieved Occupancy                                                                   %                          87.89
+    Achieved Active Warps Per SM                                                      warp                          28.12
+    ---------------------------------------------------------------------- --------------- ------------------------------
+
