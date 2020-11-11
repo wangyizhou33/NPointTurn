@@ -515,7 +515,7 @@ TEST(PaperTests, SOL1)
     uint32_t *dev_reach0, *dev_reach1;
     uint32_t *reach0, *reach1;
 
-    size_t SIZE1 = SIZE;                     // byte size
+    size_t SIZE1 = SIZE * 64;                // byte size
     uint32_t N   = SIZE1 / sizeof(uint32_t); // size of uint32_t[]
 
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
@@ -578,18 +578,18 @@ TEST(PaperTests, SOL1)
     // for (uint32_t blockSize : blockSizes)
     // {
     uint32_t blockSize = 64u;
-    // for (uint32_t unrollFactor : unrollFactors)
-    // {
+    for (uint32_t unrollFactor : unrollFactors)
+    {
 
-    uint32_t unrollFactor = 512u;
-    HANDLE_ERROR(cudaEventRecord(startEvent, 0));
-    copyKernel(blockSize, unrollFactor);
-    HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
-    HANDLE_ERROR(cudaEventSynchronize(stopEvent));
-    HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
+        // uint32_t unrollFactor = 512u;
+        HANDLE_ERROR(cudaEventRecord(startEvent, 0));
+        copyKernel(blockSize, unrollFactor);
+        HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
+        HANDLE_ERROR(cudaEventSynchronize(stopEvent));
+        HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
 
-    std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
-    // }
+        std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
+    }
     // }
 
     HANDLE_ERROR(cudaEventDestroy(startEvent));
