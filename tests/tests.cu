@@ -515,7 +515,7 @@ TEST(PaperTests, SOL1)
     uint32_t *dev_reach0, *dev_reach1;
     uint32_t *reach0, *reach1;
 
-    size_t SIZE1 = SIZE * 64;                // byte size
+    size_t SIZE1 = SIZE;                     // byte size
     uint32_t N   = SIZE1 / sizeof(uint32_t); // size of uint32_t[]
 
     HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
@@ -577,7 +577,7 @@ TEST(PaperTests, SOL1)
 
     // for (uint32_t blockSize : blockSizes)
     // {
-    uint32_t blockSize = 64u;
+    uint32_t blockSize = 32u;
     for (uint32_t unrollFactor : unrollFactors)
     {
 

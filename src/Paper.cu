@@ -743,24 +743,29 @@ __global__ void _newSweepTurn(uint32_t* RbO,
                               uint32_t Y_DIM,
                               float32_t POS_RES,
                               float32_t HDG_RES,
-                              float32_t turnRadius)
+                              float32_t turnRadius,
+                              uint32_t section)
 {
-    uint32_t i = threadIdx.x + blockIdx.x * blockDim.x;
+    uint32_t thetaGroupSize = THETA_DIM / section; // say 512 slices / 8 section
+    uint32_t thetaGroupIdx  = threadIdx.y;         // [0, ... 8)
+    uint32_t i              = threadIdx.x + blockIdx.x * blockDim.x * blockDim.y;
 
     // 0.11 ms
-    // uint32_t R = 0u;
+    uint32_t R = 0u;
 
-    // #pragma unroll
-    //     for (uint32_t theta = 0; theta < THETA_DIM; theta++)
-    //     {
-    //         R &= Fb[i];
-    //         R |= RbI[i];
-    //         RbO[i] = R;
+    uint32_t offset = thetaGroupIdx * thetaGroupSize * X_DIM / 32u * Y_DIM;
 
-    //         // 0.10 ms
-    //         // RbO[i] = RbI[i];
-    //         i += 512u;
-    //     }
+#pragma unroll
+    for (uint32_t theta = 0; theta < thetaGroupSize; theta++)
+    {
+        R &= Fb[i + offset];
+        R |= RbI[i + offset];
+        RbO[i + offset] = R;
+
+        // 0.10 ms
+        // RbO[i] = RbI[i];
+        i += 512u;
+    }
 
     // SOL: 0.012 ms
     // RbO[i] = RbI[i];
@@ -780,6 +785,8 @@ __global__ void _newSweepTurn(uint32_t* RbO,
     // i = ((i & 0xFFFFFE00) | ((i - 4) & 511));
 
     // RbO[i] = R;
+
+    /**
     uint32_t R = 0u;
 
     // theta : 0
@@ -858,22 +865,8 @@ __global__ void _newSweepTurn(uint32_t* RbO,
     i += 512u;
 
     // theta : 12
-    R &= Fb[i];
-    R |= RbI[i];
-    RbO[i] = R;
-    i += 512u;
-
-    // theta : 13
-    R &= Fb[i];
-    R |= RbI[i];
-    RbO[i] = R;
-    i += 512u;
-
-    // theta : 14
-    R &= Fb[i];
-    R |= RbI[i];
-    RbO[i] = R;
-    i += 512u;
+    R &= Fb[i];-gtest_filter=*Reachability > profile.txt
+yizhouw@yizhou-home:~/Repositories/NPointTurn$ build_tests 
 
     // theta : 15
     R &= Fb[i];
@@ -4013,6 +4006,7 @@ __global__ void _newSweepTurn(uint32_t* RbO,
     R |= RbI[i];
     RbO[i] = R;
     i += 512u;
+**/
 }
 
 void newSweepTurn(uint32_t* RbO,
@@ -4021,15 +4015,21 @@ void newSweepTurn(uint32_t* RbO,
                   float32_t turnRadius,
                   cudaStream_t cuStream)
 {
-    constexpr uint32_t ROWS_PER_BLOCK = 64u; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
-    _newSweepTurn<<<Y_DIM / ROWS_PER_BLOCK, ROWS_PER_BLOCK * X_DIM / 32, 0, cuStream>>>(RbO,
-                                                                                        Fb,
-                                                                                        RbI,
-                                                                                        X_DIM,
-                                                                                        Y_DIM,
-                                                                                        POS_RES,
-                                                                                        HDG_RES,
-                                                                                        turnRadius);
+    constexpr float32_t ROWS_PER_BLOCK = 1.f; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr uint32_t SECTION         = 32u; // same as above
+
+    dim3 grid  = {static_cast<uint32_t>(Y_DIM / ROWS_PER_BLOCK)};
+    dim3 block = {static_cast<uint32_t>(ROWS_PER_BLOCK * X_DIM / 32), SECTION};
+
+    _newSweepTurn<<<grid, block, 0, cuStream>>>(RbO,
+                                                Fb,
+                                                RbI,
+                                                X_DIM,
+                                                Y_DIM,
+                                                POS_RES,
+                                                HDG_RES,
+                                                turnRadius,
+                                                SECTION);
 }
 
 bool testGoal(const uint32_t* R, uint32_t c)
