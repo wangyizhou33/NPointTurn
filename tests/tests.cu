@@ -525,8 +525,9 @@ TEST(PaperTests, SOL1)
 
     reach0 = (uint32_t*)malloc(SIZE1);
     reach1 = (uint32_t*)malloc(SIZE1);
-    memset((void*)reach0, 0, SIZE1);
-    memset((void*)reach1, 0, SIZE1);
+
+    std::fill_n(&reach0[0], N, 1u); // memset is too error prone
+    std::fill_n(&reach1[0], N, 0u);
 
     std::cout << "mem size in bytes: " << SIZE1 << std::endl;
 
@@ -546,13 +547,13 @@ TEST(PaperTests, SOL1)
     HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
     std::cout << "copy h2d: " << ms << " ms" << std::endl;
 
-    HANDLE_ERROR(cudaEventRecord(startEvent, 0));
-    HANDLE_ERROR(cudaMemcpy(dev_reach1, dev_reach0, SIZE1,
-                            cudaMemcpyDeviceToDevice));
-    HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
-    HANDLE_ERROR(cudaEventSynchronize(stopEvent));
-    HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
-    std::cout << "copy d2d: " << ms << " ms" << std::endl;
+    // HANDLE_ERROR(cudaEventRecord(startEvent, 0));
+    // HANDLE_ERROR(cudaMemcpy(dev_reach1, dev_reach0, SIZE1,
+    //                         cudaMemcpyDeviceToDevice));
+    // HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
+    // HANDLE_ERROR(cudaEventSynchronize(stopEvent));
+    // HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
+    // std::cout << "copy d2d: " << ms << " ms" << std::endl;
 
     auto copyKernel = [&](uint32_t blockSize, uint32_t unrollFactor) {
         uint32_t gridSize = (N + blockSize - 1) / blockSize / unrollFactor;
@@ -575,28 +576,91 @@ TEST(PaperTests, SOL1)
     // warm up
     copyKernel(blockSizes[0], 512u);
 
-    // for (uint32_t blockSize : blockSizes)
-    // {
-    uint32_t blockSize = 32u;
-    for (uint32_t unrollFactor : unrollFactors)
+    for (uint32_t blockSize : blockSizes)
     {
+        // uint32_t blockSize = 32u;
+        for (uint32_t unrollFactor : unrollFactors)
+        {
 
-        // uint32_t unrollFactor = 512u;
-        HANDLE_ERROR(cudaEventRecord(startEvent, 0));
-        copyKernel(blockSize, unrollFactor);
-        HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
-        HANDLE_ERROR(cudaEventSynchronize(stopEvent));
-        HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
+            // uint32_t unrollFactor = 512u;
+            HANDLE_ERROR(cudaEventRecord(startEvent, 0));
+            copyKernel(blockSize, unrollFactor);
+            HANDLE_ERROR(cudaEventRecord(stopEvent, 0));
+            HANDLE_ERROR(cudaEventSynchronize(stopEvent));
+            HANDLE_ERROR(cudaEventElapsedTime(&ms, startEvent, stopEvent));
 
-        std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
+            std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
+        }
     }
-    // }
+
+    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE1,
+                            cudaMemcpyDeviceToHost));
+
+    // assert reach1 is all ones
+    for (uint32_t i = 0; i < N; ++i)
+    {
+        ASSERT_EQ(1, reach1[i]);
+    }
 
     HANDLE_ERROR(cudaEventDestroy(startEvent));
     HANDLE_ERROR(cudaEventDestroy(stopEvent));
 
     free(reach0);
     free(reach1);
+
+    HANDLE_ERROR(cudaFree(dev_reach0));
+    HANDLE_ERROR(cudaFree(dev_reach1));
+}
+
+TEST(PaperTests, SOL2)
+{
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
+
+    size_t SIZE1 = SIZE;                     // byte size
+    uint32_t N   = SIZE1 / sizeof(uint32_t); // size of uint32_t[]
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE1));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE1));
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE1));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE1));
+
+    reach0 = (uint32_t*)malloc(SIZE1);
+    reach1 = (uint32_t*)malloc(SIZE1);
+
+    std::fill_n(&reach0[0], N, 1u); // memset is too error prone
+    std::fill_n(&reach1[0], N, 0u);
+
+    std::cout << "mem size in bytes: " << SIZE1 << std::endl;
+
+    HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE1,
+                            cudaMemcpyHostToDevice));
+
+    constexpr float32_t ROWS_PER_BLOCK = 1.f; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr uint32_t SECTION         = 128u; // same as above
+
+    dim3 grid  = {static_cast<uint32_t>(Y_DIM / ROWS_PER_BLOCK)};
+    dim3 block = {static_cast<uint32_t>(ROWS_PER_BLOCK * X_DIM / 32), SECTION};
+
+    std::cerr << grid.x << " " << block.x << " " << block.y << std::endl;
+    copySection<<<grid, block>>>(dev_reach1, dev_reach0, X_DIM, Y_DIM, SECTION);
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE1,
+                            cudaMemcpyDeviceToHost));
+
+    // assert reach1 is all ones
+    for (uint32_t i = 0; i < N; ++i)
+    {
+        ASSERT_EQ(1, reach1[i]);
+    }
+
+    free(reach0);
+    free(reach1);
+
+    HANDLE_ERROR(cudaFree(dev_reach0));
+    HANDLE_ERROR(cudaFree(dev_reach1));
 }
 
 TEST(PaperTests, GoalTest)

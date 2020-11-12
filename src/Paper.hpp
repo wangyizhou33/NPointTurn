@@ -101,4 +101,10 @@ void tearDown(uint32_t** dev_reach, uint32_t** reach);
 
 __global__ void copy(uint32_t* dst, const uint32_t* src, uint32_t N);
 
+__global__ void copySection(uint32_t* dst,
+                            const uint32_t* src,
+                            uint32_t X_DIM,
+                            uint32_t Y_DIM,
+                            uint32_t section);
+
 #endif // PAPER_HPP_

@@ -4091,3 +4091,33 @@ __global__ void copy(uint32_t* dst, const uint32_t* src, uint32_t N)
     //         dst[i + j * gridDim.x * blockDim.x] = src[i + j * gridDim.x * blockDim.x];
     //     }
 }
+
+__global__ void copySection(uint32_t* dst,
+                            const uint32_t* src,
+                            uint32_t X_DIM,
+                            uint32_t Y_DIM,
+                            uint32_t section)
+{
+    uint32_t thetaGroupSize = THETA_DIM / section;
+
+    // 1 dim access pattern
+    // uint32_t thetaGroupIdx  = threadIdx.x % section;
+    // uint32_t i              = (threadIdx.x + blockIdx.x * blockDim.x) / section;
+
+    // 2 dim access pattern
+    uint32_t thetaGroupIdx = threadIdx.y;
+    uint32_t i             = threadIdx.x + blockIdx.x * blockDim.x;
+
+    uint32_t planeSize = X_DIM * Y_DIM / 32u;
+    uint32_t offset    = thetaGroupIdx * thetaGroupSize * planeSize;
+
+    // if (blockIdx.x == 0)
+    //     printf("%d, %d, %d\n", thetaGroupIdx, threadIdx.x, i);
+
+#pragma unroll
+    for (uint32_t theta = 0; theta < thetaGroupSize; theta++)
+    {
+        dst[i + offset] = src[i + offset];
+        i += planeSize;
+    }
+}
