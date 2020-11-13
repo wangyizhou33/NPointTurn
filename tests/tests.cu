@@ -636,7 +636,7 @@ TEST(PaperTests, SOL2)
     HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE1,
                             cudaMemcpyHostToDevice));
 
-    constexpr float32_t ROWS_PER_BLOCK = 1.f; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr float32_t ROWS_PER_BLOCK = 1.f;  // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
     constexpr uint32_t SECTION         = 128u; // same as above
 
     dim3 grid  = {static_cast<uint32_t>(Y_DIM / ROWS_PER_BLOCK)};
@@ -661,6 +661,104 @@ TEST(PaperTests, SOL2)
 
     HANDLE_ERROR(cudaFree(dev_reach0));
     HANDLE_ERROR(cudaFree(dev_reach1));
+}
+
+TEST(PaperTests, propagation)
+{
+    constexpr float32_t ROWS_PER_BLOCK = 1.f; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr uint32_t SECTION         = 32u; // same as above
+    constexpr uint32_t planeSize       = X_DIM * Y_DIM / 32u;
+
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
+    uint32_t *dev_fb, *dev_fs;
+    uint32_t* fs;
+
+    uint32_t N = SIZE / sizeof(uint32_t); // size of uint32_t[]
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
+    HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
+    HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
+    HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
+
+    HANDLE_ERROR(cudaMalloc((void**)&dev_fs, SIZE / SECTION));
+    HANDLE_ERROR(cudaMemset((void*)dev_fs, 0, SIZE / SECTION)); // set all ones
+
+    reach0 = (uint32_t*)malloc(SIZE);
+    reach1 = (uint32_t*)malloc(SIZE);
+    fs     = (uint32_t*)malloc(SIZE / SECTION);
+
+    std::fill_n(&reach0[0], N, 0u);                  // memset is too error prone
+    std::fill_n(&reach0[0], planeSize, 4294967295u); // set 0-th theta slice to 1
+    std::fill_n(&reach1[0], N, 0u);
+
+    std::cout << "mem size in bytes: " << SIZE << std::endl;
+
+    HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
+                            cudaMemcpyHostToDevice));
+
+    dim3 grid  = {static_cast<uint32_t>(Y_DIM / ROWS_PER_BLOCK)};
+    dim3 block = {static_cast<uint32_t>(ROWS_PER_BLOCK * X_DIM / 32), SECTION};
+
+    // first
+    std::cerr << grid.x << " " << block.x << " " << block.y << std::endl;
+    sweepSectionFirst<<<grid, block>>>(dev_reach1, dev_fs, dev_fb, dev_reach0, X_DIM, Y_DIM, SECTION);
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
+                            cudaMemcpyDeviceToHost));
+
+    HANDLE_ERROR(cudaMemcpy(fs, dev_fs, SIZE / SECTION,
+                            cudaMemcpyDeviceToHost));
+    // assert the first section is all ones
+    for (uint32_t i = 0; i < N / SECTION; ++i)
+    {
+        ASSERT_EQ(4294967295u, reach1[i]);
+    }
+    for (uint32_t i = 0; i < N / SECTION; ++i)
+    {
+        // std::cerr << i << " " << fs[i] << std::endl;
+        ASSERT_EQ(4294967295u, fs[i]);
+    }
+
+    // middle
+    block.y = 1;
+    sweepSectionMiddle<<<grid, block>>>(dev_reach1, dev_fs, X_DIM, Y_DIM, SECTION);
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    HANDLE_ERROR(cudaMemcpy(dev_reach0, dev_reach1, SIZE,
+                            cudaMemcpyDeviceToDevice));
+
+    // last
+    block.y = SECTION;
+    sweepSectionLast<<<grid, block>>>(dev_reach1, dev_fb, dev_reach0, X_DIM, Y_DIM, SECTION);
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
+                            cudaMemcpyDeviceToHost));
+
+    HANDLE_ERROR(cudaMemcpy(fs, dev_fs, SIZE / SECTION,
+                            cudaMemcpyDeviceToHost));
+    // assert the first section is all ones
+    for (uint32_t i = 0; i < N; ++i)
+    {
+        ASSERT_EQ(4294967295u, reach1[i]);
+    }
+
+    free(reach0);
+    free(reach1);
+    free(fs);
+
+    HANDLE_ERROR(cudaFree(dev_reach0));
+    HANDLE_ERROR(cudaFree(dev_reach1));
+    HANDLE_ERROR(cudaFree(dev_fb));
+    HANDLE_ERROR(cudaFree(dev_fs));
 }
 
 TEST(PaperTests, GoalTest)

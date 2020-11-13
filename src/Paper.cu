@@ -4121,3 +4121,101 @@ __global__ void copySection(uint32_t* dst,
         i += planeSize;
     }
 }
+
+__global__ void sweepSectionFirst(uint32_t* RbO,
+                                  uint32_t* Fs,
+                                  const uint32_t* Fb,
+                                  const uint32_t* RbI,
+                                  uint32_t X_DIM,
+                                  uint32_t Y_DIM,
+                                  uint32_t section)
+{
+    uint32_t thetaGroupSize = THETA_DIM / section;
+
+    // 1 dim access pattern
+    // uint32_t thetaGroupIdx  = threadIdx.x % section;
+    // uint32_t i              = (threadIdx.x + blockIdx.x * blockDim.x) / section;
+
+    // 2 dim access pattern
+    uint32_t thetaGroupIdx = threadIdx.y;
+    uint32_t i             = threadIdx.x + blockIdx.x * blockDim.x;
+
+    uint32_t planeSize = X_DIM * Y_DIM / 32u;
+    uint32_t offset    = thetaGroupIdx * thetaGroupSize * planeSize;
+
+    uint32_t R = 0u;
+    uint32_t F = 4294967295u; // 1 if the all section is free
+#pragma unroll
+    for (uint32_t theta = 0; theta < thetaGroupSize; theta++)
+    {
+        uint32_t F1 = Fb[i + offset];
+
+        R &= F1;
+        R |= RbI[i + offset];
+        F &= F1;
+        RbO[i + offset] = R;
+
+        i += planeSize;
+    }
+    Fs[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section] = F;
+
+    // TODO backward propagation
+}
+
+__global__ void sweepSectionMiddle(uint32_t* RbO,
+                                   uint32_t* Fs,
+                                   uint32_t X_DIM,
+                                   uint32_t Y_DIM,
+                                   uint32_t section)
+{
+    uint32_t thetaGroupSize = THETA_DIM / section;
+    uint32_t i              = threadIdx.x + blockIdx.x * blockDim.x;
+
+    uint32_t planeSize = X_DIM * Y_DIM / 32u;
+
+    uint32_t R = 0u;
+
+#pragma unroll
+    for (uint32_t theta = 0; theta < section; theta++)
+    {
+        R &= Fs[theta + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        R |= RbO[i];
+        RbO[i] = R;
+
+        i += planeSize * thetaGroupSize;
+    }
+}
+
+__global__ void sweepSectionLast(uint32_t* RbO,
+                                 const uint32_t* Fb,
+                                 const uint32_t* RbI,
+                                 uint32_t X_DIM,
+                                 uint32_t Y_DIM,
+                                 uint32_t section)
+{
+    uint32_t thetaGroupSize = THETA_DIM / section;
+
+    // 1 dim access pattern
+    // uint32_t thetaGroupIdx  = threadIdx.x % section;
+    // uint32_t i              = (threadIdx.x + blockIdx.x * blockDim.x) / section;
+
+    // 2 dim access pattern
+    uint32_t thetaGroupIdx = threadIdx.y;
+    uint32_t i             = threadIdx.x + blockIdx.x * blockDim.x;
+
+    uint32_t planeSize = X_DIM * Y_DIM / 32u;
+    uint32_t offset    = thetaGroupIdx * thetaGroupSize * planeSize;
+
+    uint32_t R = 0u;
+#pragma unroll
+    for (uint32_t theta = 0; theta < thetaGroupSize; theta++)
+    {
+        R &= Fb[i + offset];
+        R |= RbI[i + offset];
+        RbO[i + offset] = R;
+
+        i += planeSize;
+    }
+
+    // TODO backward propagation
+}
