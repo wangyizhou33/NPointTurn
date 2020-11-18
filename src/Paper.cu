@@ -4122,7 +4122,8 @@ __global__ void copySection(uint32_t* dst,
     }
 }
 
-__global__ void sweepSectionFirst(uint32_t* RbO,
+__global__ void sweepSectionFirst(uint32_t* Gf,
+                                  uint32_t* Gr,
                                   uint32_t* Fs,
                                   const uint32_t* Fb,
                                   const uint32_t* RbI,
@@ -4143,52 +4144,83 @@ __global__ void sweepSectionFirst(uint32_t* RbO,
     uint32_t planeSize = X_DIM * Y_DIM / 32u;
     uint32_t offset    = thetaGroupIdx * thetaGroupSize * planeSize;
 
-    uint32_t R = 0u;
-    uint32_t F = 4294967295u; // 1 if the all section is free
+    uint32_t Ri[16]; // need to assert 16 >= thetaGroupSize
+    uint32_t Fi[16];
+
+    // fetching reachability and freespace in a section
+    // TODO: this needs to be changed to turn coordinates
 #pragma unroll
-    for (uint32_t theta = 0; theta < thetaGroupSize; theta++)
+    for (uint32_t theta = 0u; theta < thetaGroupSize; theta++)
     {
-        uint32_t F1 = Fb[i + offset];
-
-        R &= F1;
-        R |= RbI[i + offset];
-        F &= F1;
-        RbO[i + offset] = R;
-
-        i += planeSize;
+        Fi[theta] = Fb[i + offset + theta * planeSize];
+        Ri[theta] = RbI[i + offset + theta * planeSize];
     }
-    Fs[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section] = F;
 
-    // TODO backward propagation
+    // sweep within section
+    uint32_t forward = Ri[0];                   // carry forward reachibility in a section
+    uint32_t reverse = Ri[thetaGroupSize - 1u]; // carry reverse reachibility in a section
+    uint32_t F       = Fi[0];                   // carry freespace in a section,
+                                                // finally, 1 if the all section is free
+
+#pragma unroll
+    // skiping the first &, i.e. R & F1 is unncessary
+    for (uint32_t theta = 1u; theta < thetaGroupSize; theta++)
+    {
+        forward &= Fi[theta];
+        forward |= Ri[theta];
+
+        reverse &= Fi[thetaGroupSize - 1u - theta];
+        reverse |= Ri[thetaGroupSize - 1u - theta];
+
+        F &= Fi[theta]; // can be both forward and reverse
+    }
+
+    Gf[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section] = forward;
+    Gr[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section] = reverse;
+    Fs[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section] = F;
 }
 
-__global__ void sweepSectionMiddle(uint32_t* RbO,
-                                   uint32_t* Fs,
+__global__ void sweepSectionMiddle(uint32_t* Gf,       // sectional forward reachability volume
+                                   uint32_t* Gr,       // sectional reverse reachability volume
+                                   const uint32_t* Fs, // sectional freespace volume
                                    uint32_t X_DIM,
                                    uint32_t Y_DIM,
                                    uint32_t section)
 {
-    uint32_t thetaGroupSize = THETA_DIM / section;
-    uint32_t i              = threadIdx.x + blockIdx.x * blockDim.x;
+    uint32_t forward = 0u;
+    uint32_t reverse = 0u;
 
-    uint32_t planeSize = X_DIM * Y_DIM / 32u;
-
-    uint32_t R = 0u;
-
+    // first pass without writing
 #pragma unroll
-    for (uint32_t theta = 0; theta < section; theta++)
+    for (uint32_t idx = 0u; idx < section; idx++)
     {
-        R &= Fs[theta + threadIdx.x * section + blockIdx.x * blockDim.x * section];
-        R |= RbO[i];
-        RbO[i] = R;
+        forward &= Fs[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        forward |= Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
 
-        i += planeSize * thetaGroupSize;
+        reverse &= Fs[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        reverse |= Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+    }
+
+// second pass
+#pragma unroll
+    for (uint32_t idx = 0u; idx < section; idx++)
+    {
+        forward &= Fs[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        forward |= Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+
+        Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section] = forward;
+
+        reverse &= Fs[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        reverse |= Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+
+        Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section] = reverse;
     }
 }
 
 __global__ void sweepSectionLast(uint32_t* RbO,
+                                 const uint32_t* Gf, // sectional forward reachability volume
+                                 const uint32_t* Gr, // sectional reverse reachability volume
                                  const uint32_t* Fb,
-                                 const uint32_t* RbI,
                                  uint32_t X_DIM,
                                  uint32_t Y_DIM,
                                  uint32_t section)
@@ -4206,15 +4238,23 @@ __global__ void sweepSectionLast(uint32_t* RbO,
     uint32_t planeSize = X_DIM * Y_DIM / 32u;
     uint32_t offset    = thetaGroupIdx * thetaGroupSize * planeSize;
 
-    uint32_t R = 0u;
-#pragma unroll
-    for (uint32_t theta = 0; theta < thetaGroupSize; theta++)
-    {
-        R &= Fb[i + offset];
-        R |= RbI[i + offset];
-        RbO[i + offset] = R;
+    // fill the boundary cells in a section
+    RbO[i + offset + 0u * planeSize]                   = Gf[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+    RbO[i + offset + (thetaGroupSize - 1) * planeSize] = Gr[threadIdx.y + threadIdx.x * section + blockIdx.x * blockDim.x * section];
 
-        i += planeSize;
+    uint32_t forward = 0u;
+    uint32_t reverse = 0u;
+
+#pragma unroll
+    for (uint32_t theta = 0u; theta < thetaGroupSize; theta++)
+    {
+        forward &= Fb[i + offset + theta * planeSize];
+        forward |= RbO[i + offset + theta * planeSize];
+        RbO[i + offset + theta * planeSize] = forward;
+
+        reverse &= Fb[i + offset + (thetaGroupSize - 1u - theta) * planeSize];
+        reverse |= RbO[i + offset + (thetaGroupSize - 1u - theta) * planeSize];
+        RbO[i + offset + (thetaGroupSize - 1u - theta) * planeSize] = forward;
     }
 
     // TODO backward propagation

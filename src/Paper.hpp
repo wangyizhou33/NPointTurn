@@ -107,23 +107,26 @@ __global__ void copySection(uint32_t* dst,
                             uint32_t Y_DIM,
                             uint32_t section);
 
-__global__ void sweepSectionFirst(uint32_t* RbO,
-                                  uint32_t* Fs,
-                                  const uint32_t* Fb,
-                                  const uint32_t* RbI,
+__global__ void sweepSectionFirst(uint32_t* Gf,        // sectional forward reachability volume
+                                  uint32_t* Gr,        // sectional reverse reachability volume
+                                  uint32_t* Fs,        // sectional freespace volume
+                                  const uint32_t* Fb,  // input bit freespace volume
+                                  const uint32_t* RbI, // input bit reachability volume
                                   uint32_t X_DIM,
                                   uint32_t Y_DIM,
                                   uint32_t section);
 
-__global__ void sweepSectionMiddle(uint32_t* RbO,
-                                   uint32_t* Fs,
+__global__ void sweepSectionMiddle(uint32_t* Gf,       // sectional forward reachability volume
+                                   uint32_t* Gr,       // sectional reverse reachability volume
+                                   const uint32_t* Fs, // sectional freespace volume
                                    uint32_t X_DIM,
                                    uint32_t Y_DIM,
                                    uint32_t section);
 
 __global__ void sweepSectionLast(uint32_t* RbO,
+                                 const uint32_t* Gf, // sectional forward reachability volume
+                                 const uint32_t* Gr, // sectional reverse reachability volume
                                  const uint32_t* Fb,
-                                 const uint32_t* RbI,
                                  uint32_t X_DIM,
                                  uint32_t Y_DIM,
                                  uint32_t section);

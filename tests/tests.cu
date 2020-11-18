@@ -665,100 +665,155 @@ TEST(PaperTests, SOL2)
 
 TEST(PaperTests, propagation)
 {
-    constexpr float32_t ROWS_PER_BLOCK = 1.f; // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
-    constexpr uint32_t SECTION         = 32u; // same as above
-    constexpr uint32_t planeSize       = X_DIM * Y_DIM / 32u;
+    constexpr float32_t ROWS_PER_BLOCK = 1.f;                 // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr uint32_t SECTION         = 32u;                 // number of sections. must be power of 2
+    constexpr uint32_t PLANE_SIZE      = X_DIM * Y_DIM / 32u; // number of cells in a theta slice
+    constexpr uint32_t SECTION_SIZE    = THETA_DIM / SECTION; // number of theta slices in a section
 
     uint32_t *dev_reach0, *dev_reach1;
     uint32_t *reach0, *reach1;
-    uint32_t *dev_fb, *dev_fs;
-    uint32_t* fs;
+    uint32_t* dev_fb;
+    uint32_t *dev_fs, *dev_gf, *dev_gr; // sectional
+    uint32_t* host_temp;                // to assert results at intermediate steps
 
+    // access reach0[N - 1]
     uint32_t N = SIZE / sizeof(uint32_t); // size of uint32_t[]
 
-    HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
-    HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
-    HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
-    HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
+    // construction
+    {
+        HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
+        HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
 
-    HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
-    HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
+        HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
 
-    HANDLE_ERROR(cudaMalloc((void**)&dev_fs, SIZE / SECTION));
-    HANDLE_ERROR(cudaMemset((void*)dev_fs, 0, SIZE / SECTION)); // set all ones
+        HANDLE_ERROR(cudaMalloc((void**)&dev_fs, SIZE / SECTION_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_fs, 0, SIZE / SECTION_SIZE)); // set all ones
 
-    reach0 = (uint32_t*)malloc(SIZE);
-    reach1 = (uint32_t*)malloc(SIZE);
-    fs     = (uint32_t*)malloc(SIZE / SECTION);
+        HANDLE_ERROR(cudaMalloc((void**)&dev_gf, SIZE / SECTION_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_gf, 0, SIZE / SECTION_SIZE));
 
-    std::fill_n(&reach0[0], N, 0u);                  // memset is too error prone
-    std::fill_n(&reach0[0], planeSize, 4294967295u); // set 0-th theta slice to 1
-    std::fill_n(&reach1[0], N, 0u);
+        HANDLE_ERROR(cudaMalloc((void**)&dev_gr, SIZE / SECTION_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_gr, 0, SIZE / SECTION_SIZE));
+
+        reach0    = (uint32_t*)malloc(SIZE);
+        reach1    = (uint32_t*)malloc(SIZE);
+        host_temp = (uint32_t*)malloc(SIZE / SECTION_SIZE);
+
+        std::fill_n(&reach0[0], N, 0u);                            // memset is too error prone
+        std::fill_n(&reach0[PLANE_SIZE], PLANE_SIZE, 4294967295u); // set 0-th theta slice to 1
+        std::fill_n(&reach1[0], N, 0u);
+
+        HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
+                                cudaMemcpyHostToDevice));
+    }
 
     std::cout << "mem size in bytes: " << SIZE << std::endl;
-
-    HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
-                            cudaMemcpyHostToDevice));
 
     dim3 grid  = {static_cast<uint32_t>(Y_DIM / ROWS_PER_BLOCK)};
     dim3 block = {static_cast<uint32_t>(ROWS_PER_BLOCK * X_DIM / 32), SECTION};
 
     // first
-    std::cerr << grid.x << " " << block.x << " " << block.y << std::endl;
-    sweepSectionFirst<<<grid, block>>>(dev_reach1, dev_fs, dev_fb, dev_reach0, X_DIM, Y_DIM, SECTION);
+    std::cerr << "grid: " << grid.x
+              << ", block 1st " << block.x
+              << ", block 2nd " << block.y
+              << std::endl;
+    sweepSectionFirst<<<grid, block>>>(dev_gf, dev_gr, dev_fs,
+                                       dev_fb, dev_reach0,
+                                       X_DIM, Y_DIM, SECTION);
     cudaDeviceSynchronize();
     HANDLE_ERROR(cudaGetLastError());
 
-    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
-                            cudaMemcpyDeviceToHost));
-
-    HANDLE_ERROR(cudaMemcpy(fs, dev_fs, SIZE / SECTION,
-                            cudaMemcpyDeviceToHost));
-    // assert the first section is all ones
-    for (uint32_t i = 0; i < N / SECTION; ++i)
+    // assertion
     {
-        ASSERT_EQ(4294967295u, reach1[i]);
-    }
-    for (uint32_t i = 0; i < N / SECTION; ++i)
-    {
-        // std::cerr << i << " " << fs[i] << std::endl;
-        ASSERT_EQ(4294967295u, fs[i]);
+        // assert the sectional freespace are all 1
+        HANDLE_ERROR(cudaMemcpy(host_temp, dev_fs, SIZE / SECTION_SIZE,
+                                cudaMemcpyDeviceToHost));
+        for (uint32_t i = 0; i < N / SECTION_SIZE; ++i)
+        {
+            ASSERT_EQ(4294967295u, host_temp[i]);
+        }
+
+        // assert in gf and gr, the bottom theta slice is all 1
+        // gf and gr are theta major
+        HANDLE_ERROR(cudaMemcpy(host_temp, dev_gr, SIZE / SECTION_SIZE,
+                                cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < N / SECTION_SIZE; i += SECTION)
+        {
+            ASSERT_EQ(4294967295u, host_temp[i]);
+        }
+
+        HANDLE_ERROR(cudaMemcpy(host_temp, dev_gf, SIZE / SECTION_SIZE,
+                                cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < N / SECTION_SIZE; i += SECTION)
+        {
+            ASSERT_EQ(4294967295u, host_temp[i]);
+        }
     }
 
-    // middle
+    // // middle
     block.y = 1;
-    sweepSectionMiddle<<<grid, block>>>(dev_reach1, dev_fs, X_DIM, Y_DIM, SECTION);
+    sweepSectionMiddle<<<grid, block>>>(dev_gf, dev_gr,
+                                        dev_fs,
+                                        X_DIM, Y_DIM, SECTION);
     cudaDeviceSynchronize();
     HANDLE_ERROR(cudaGetLastError());
 
-    HANDLE_ERROR(cudaMemcpy(dev_reach0, dev_reach1, SIZE,
-                            cudaMemcpyDeviceToDevice));
+    {
+        // assert gf and gr are all 1's
+        HANDLE_ERROR(cudaMemcpy(host_temp, dev_gf, SIZE / SECTION_SIZE,
+                                cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < N / SECTION_SIZE; ++i)
+        {
+            ASSERT_EQ(4294967295u, host_temp[i]);
+        }
+
+        HANDLE_ERROR(cudaMemcpy(host_temp, dev_gr, SIZE / SECTION_SIZE,
+                                cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < N / SECTION_SIZE; ++i)
+        {
+            ASSERT_EQ(4294967295u, host_temp[i]);
+        }
+    }
 
     // last
     block.y = SECTION;
-    sweepSectionLast<<<grid, block>>>(dev_reach1, dev_fb, dev_reach0, X_DIM, Y_DIM, SECTION);
+    sweepSectionLast<<<grid, block>>>(dev_reach1,
+                                      dev_gf, dev_gr, dev_fb,
+                                      X_DIM, Y_DIM, SECTION);
     cudaDeviceSynchronize();
     HANDLE_ERROR(cudaGetLastError());
 
-    HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
-                            cudaMemcpyDeviceToHost));
-
-    HANDLE_ERROR(cudaMemcpy(fs, dev_fs, SIZE / SECTION,
-                            cudaMemcpyDeviceToHost));
-    // assert the first section is all ones
-    for (uint32_t i = 0; i < N; ++i)
     {
-        ASSERT_EQ(4294967295u, reach1[i]);
+        // assert reach1 is all 1's
+        HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
+                                cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < N; ++i)
+        {
+            ASSERT_EQ(4294967295u, reach1[i]);
+        }
     }
 
-    free(reach0);
-    free(reach1);
-    free(fs);
+    // destruction
+    {
+        free(reach0);
+        free(reach1);
+        free(host_temp);
 
-    HANDLE_ERROR(cudaFree(dev_reach0));
-    HANDLE_ERROR(cudaFree(dev_reach1));
-    HANDLE_ERROR(cudaFree(dev_fb));
-    HANDLE_ERROR(cudaFree(dev_fs));
+        HANDLE_ERROR(cudaFree(dev_reach0));
+        HANDLE_ERROR(cudaFree(dev_reach1));
+        HANDLE_ERROR(cudaFree(dev_fb));
+        HANDLE_ERROR(cudaFree(dev_fs));
+        HANDLE_ERROR(cudaFree(dev_gf));
+        HANDLE_ERROR(cudaFree(dev_gr));
+    }
 }
 
 TEST(PaperTests, GoalTest)
