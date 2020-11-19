@@ -816,6 +816,110 @@ TEST(PaperTests, propagation)
     }
 }
 
+TEST(PaperTests, propagation_multiTurnType)
+{
+    constexpr float32_t ROWS_PER_BLOCK = 1.f;                 // must be power of 2, 1, 2, 4, 8, 16, 32, 64, 128
+    constexpr uint32_t SECTION         = 32u;                 // number of sections. must be power of 2
+    constexpr uint32_t PLANE_SIZE      = X_DIM * Y_DIM / 32u; // number of cells in a theta slice
+    constexpr uint32_t SECTION_SIZE    = THETA_DIM / SECTION; // number of theta slices in a section
+
+    constexpr uint32_t TURN_SIZE = 8u; // 4 abs curvatures * 2 sides
+
+    uint32_t *dev_reach0, *dev_reach1;
+    uint32_t *reach0, *reach1;
+    uint32_t* dev_fb;
+    uint32_t *dev_fs, *dev_gf, *dev_gr; // sectional
+    uint32_t* host_temp;                // to assert results at intermediate steps
+    cudaStream_t streams[TURN_SIZE];    // each stream takes care of
+
+    // access reach0[N - 1]
+    uint32_t N = SIZE / sizeof(uint32_t); // size of uint32_t[]
+
+    // construction
+    {
+        HANDLE_ERROR(cudaMalloc((void**)&dev_reach0, SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
+        HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
+
+        HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
+
+        HANDLE_ERROR(cudaMalloc((void**)&dev_fs, SIZE / SECTION_SIZE * TURN_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_fs, 0, SIZE / SECTION_SIZE * TURN_SIZE)); // set all ones
+
+        HANDLE_ERROR(cudaMalloc((void**)&dev_gf, SIZE / SECTION_SIZE * TURN_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_gf, 0, SIZE / SECTION_SIZE * TURN_SIZE));
+
+        HANDLE_ERROR(cudaMalloc((void**)&dev_gr, SIZE / SECTION_SIZE * TURN_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_gr, 0, SIZE / SECTION_SIZE * TURN_SIZE));
+
+        reach0    = (uint32_t*)malloc(SIZE);
+        reach1    = (uint32_t*)malloc(SIZE);
+        host_temp = (uint32_t*)malloc(SIZE / SECTION_SIZE);
+
+        std::fill_n(&reach0[0], N, 0u);                            // memset is too error prone
+        std::fill_n(&reach0[PLANE_SIZE], PLANE_SIZE, 4294967295u); // set 0-th theta slice to 1
+        std::fill_n(&reach1[0], N, 0u);
+
+        HANDLE_ERROR(cudaMemcpy(dev_reach0, reach0, SIZE,
+                                cudaMemcpyHostToDevice));
+
+        for (uint32_t i = 0u; i < TURN_SIZE; ++i)
+        {
+            cudaStreamCreate(&streams[i]);
+        }
+    }
+
+    std::cout << "mem size in bytes: " << SIZE << std::endl;
+
+    dim3 grid  = {static_cast<uint32_t>(Y_DIM / ROWS_PER_BLOCK)};
+    dim3 block = {static_cast<uint32_t>(ROWS_PER_BLOCK * X_DIM / 32), SECTION};
+
+    // first
+    std::cerr << "grid: " << grid.x
+              << ", block 1st " << block.x
+              << ", block 2nd " << block.y
+              << std::endl;
+
+    for (uint32_t turn = 0u; turn < TURN_SIZE; ++turn)
+    {
+        sweepSectionFirst<<<grid, block, 0, streams[turn]>>>(&dev_gf[N / SECTION_SIZE * turn], &dev_gr[N / SECTION_SIZE * turn], &dev_fs[N / SECTION_SIZE * turn],
+                                                             dev_fb, dev_reach0,
+                                                             X_DIM, Y_DIM, SECTION);
+    }
+
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    // middle
+    block.y = TURN_SIZE;
+    sweepSectionMiddle<<<grid, block, 0, streams[0]>>>(dev_gf, dev_gr,
+                                                       dev_fs,
+                                                       X_DIM, Y_DIM, SECTION);
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    // destruction
+    {
+        free(reach0);
+        free(reach1);
+        free(host_temp);
+
+        HANDLE_ERROR(cudaFree(dev_reach0));
+        HANDLE_ERROR(cudaFree(dev_reach1));
+        HANDLE_ERROR(cudaFree(dev_fb));
+        HANDLE_ERROR(cudaFree(dev_fs));
+        HANDLE_ERROR(cudaFree(dev_gf));
+        HANDLE_ERROR(cudaFree(dev_gr));
+
+        for (uint32_t i = 0u; i < TURN_SIZE; ++i)
+        {
+            cudaStreamDestroy(streams[i]);
+        }
+    }
+}
+
 TEST(PaperTests, GoalTest)
 {
     uint32_t* reach0 = (uint32_t*)malloc(SIZE);

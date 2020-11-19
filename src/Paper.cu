@@ -4187,6 +4187,8 @@ __global__ void sweepSectionMiddle(uint32_t* Gf,       // sectional forward reac
                                    uint32_t Y_DIM,
                                    uint32_t section)
 {
+    uint32_t turnOffset = X_DIM / 32u * Y_DIM * section;
+
     uint32_t forward = 0u;
     uint32_t reverse = 0u;
 
@@ -4194,26 +4196,26 @@ __global__ void sweepSectionMiddle(uint32_t* Gf,       // sectional forward reac
 #pragma unroll
     for (uint32_t idx = 0u; idx < section; idx++)
     {
-        forward &= Fs[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
-        forward |= Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        forward &= Fs[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
+        forward |= Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
 
-        reverse &= Fs[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
-        reverse |= Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        reverse &= Fs[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
+        reverse |= Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
     }
 
 // second pass
 #pragma unroll
     for (uint32_t idx = 0u; idx < section; idx++)
     {
-        forward &= Fs[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
-        forward |= Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        forward &= Fs[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
+        forward |= Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
 
-        Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section] = forward;
+        Gf[idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset] = forward;
 
-        reverse &= Fs[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
-        reverse |= Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section];
+        reverse &= Fs[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
+        reverse |= Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset];
 
-        Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section] = reverse;
+        Gr[section - 1u - idx + threadIdx.x * section + blockIdx.x * blockDim.x * section + threadIdx.y * turnOffset] = reverse;
     }
 }
 
