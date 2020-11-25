@@ -571,7 +571,7 @@ TEST(PaperTests, SOL1)
     };
 
     uint32_t unrollFactors[]{1u, 2u, 4u, 8u, 16u, 32u, 64u, 128u, 256u, 512u};
-    uint32_t blockSizes[]{8u, 16u, 32u, 64u, 128u, 256u, 512u, 1024u};
+    uint32_t blockSizes[]{8u, 16u, 32u, 64u, 128u, 256u, 512u}; // 1024 leads to invalid launch configuration
 
     // warm up
     copyKernel(blockSizes[0], 512u);
@@ -592,7 +592,7 @@ TEST(PaperTests, SOL1)
             std::cout << "kernel copy d2d: " << ms << " ms" << std::endl;
         }
     }
-
+    HANDLE_ERROR(cudaGetLastError());
     HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE1,
                             cudaMemcpyDeviceToHost));
 
@@ -826,6 +826,7 @@ TEST(PaperTests, propagation_multiTurnType)
     constexpr uint32_t TURN_SIZE = 8u; // 4 abs curvatures * 2 sides
 
     uint32_t *dev_reach0, *dev_reach1;
+    uint32_t* dev_reach_turn;
     uint32_t *reach0, *reach1;
     uint32_t* dev_fb;
     uint32_t *dev_fs, *dev_gf, *dev_gr; // sectional
@@ -841,6 +842,8 @@ TEST(PaperTests, propagation_multiTurnType)
         HANDLE_ERROR(cudaMemset((void*)dev_reach0, 0, SIZE));
         HANDLE_ERROR(cudaMalloc((void**)&dev_reach1, SIZE));
         HANDLE_ERROR(cudaMemset((void*)dev_reach1, 0, SIZE));
+        HANDLE_ERROR(cudaMalloc((void**)&dev_reach_turn, SIZE * TURN_SIZE));
+        HANDLE_ERROR(cudaMemset((void*)dev_reach_turn, 0, SIZE * TURN_SIZE));
 
         HANDLE_ERROR(cudaMalloc((void**)&dev_fb, SIZE));
         HANDLE_ERROR(cudaMemset((void*)dev_fb, 2147483647, SIZE)); // set all ones
@@ -884,9 +887,9 @@ TEST(PaperTests, propagation_multiTurnType)
 
     for (uint32_t turn = 0u; turn < TURN_SIZE; ++turn)
     {
-        sweepSectionFirst<<<grid, block, 0, streams[turn]>>>(&dev_gf[N / SECTION_SIZE * turn], &dev_gr[N / SECTION_SIZE * turn], &dev_fs[N / SECTION_SIZE * turn],
-                                                             dev_fb, dev_reach0,
-                                                             X_DIM, Y_DIM, SECTION);
+        sweepSectionFirst<<<grid, block, 0, streams[0]>>>(&dev_gf[N / SECTION_SIZE * turn], &dev_gr[N / SECTION_SIZE * turn], &dev_fs[N / SECTION_SIZE * turn],
+                                                          dev_fb, dev_reach0,
+                                                          X_DIM, Y_DIM, SECTION);
     }
 
     cudaDeviceSynchronize();
@@ -900,6 +903,36 @@ TEST(PaperTests, propagation_multiTurnType)
     cudaDeviceSynchronize();
     HANDLE_ERROR(cudaGetLastError());
 
+    // last
+    block.y = SECTION;
+    for (uint32_t turn = 0u; turn < TURN_SIZE; ++turn)
+    {
+
+        sweepSectionLast<<<grid, block, 0, streams[0]>>>(&dev_reach_turn[N * turn],
+                                                         &dev_gf[N / SECTION_SIZE * turn],
+                                                         &dev_gr[N / SECTION_SIZE * turn],
+                                                         dev_fb,
+                                                         X_DIM, Y_DIM, SECTION);
+    }
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    // merge
+    merge<<<Y_DIM * X_DIM / 32u, THETA_DIM, 0, streams[0]>>>(dev_reach1, dev_reach_turn, TURN_SIZE);
+    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    {
+        // assert reach1 is all 1's
+        HANDLE_ERROR(cudaMemcpy(reach1, dev_reach1, SIZE,
+                                cudaMemcpyDeviceToHost));
+
+        for (uint32_t i = 0; i < N; ++i)
+        {
+            ASSERT_EQ(4294967295u, reach1[i]);
+        }
+    }
+
     // destruction
     {
         free(reach0);
@@ -908,6 +941,7 @@ TEST(PaperTests, propagation_multiTurnType)
 
         HANDLE_ERROR(cudaFree(dev_reach0));
         HANDLE_ERROR(cudaFree(dev_reach1));
+        HANDLE_ERROR(cudaFree(dev_reach_turn));
         HANDLE_ERROR(cudaFree(dev_fb));
         HANDLE_ERROR(cudaFree(dev_fs));
         HANDLE_ERROR(cudaFree(dev_gf));

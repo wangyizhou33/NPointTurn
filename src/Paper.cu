@@ -4261,3 +4261,20 @@ __global__ void sweepSectionLast(uint32_t* RbO,
 
     // TODO backward propagation
 }
+
+__global__ void merge(uint32_t* RbO,
+                      const uint32_t* Ri,
+                      uint32_t turnSize)
+{
+    uint32_t i      = blockIdx.x * blockDim.x + threadIdx.x;
+    uint32_t stride = blockDim.x * gridDim.x;
+
+    uint32_t R{0};
+#pragma unroll
+    for (uint32_t turn = 0u; turn < turnSize; ++turn)
+    {
+        R |= Ri[i + turn * stride];
+    }
+
+    RbO[i] = R;
+}

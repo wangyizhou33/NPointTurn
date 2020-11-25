@@ -131,4 +131,9 @@ __global__ void sweepSectionLast(uint32_t* RbO,
                                  uint32_t Y_DIM,
                                  uint32_t section);
 
+// merge turn volumes into one
+__global__ void merge(uint32_t* RbO,
+                      const uint32_t* Ri,
+                      uint32_t turnSize);
+
 #endif // PAPER_HPP_
