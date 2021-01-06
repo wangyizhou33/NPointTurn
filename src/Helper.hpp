@@ -1,6 +1,7 @@
 #ifndef HELPER_HPP_
 #define HELPER_HPP_
 
+#include <cstdlib>
 #include <stdio.h>
 #include <cstdint>
 #include <cuda_runtime_api.h> // cudaError_t

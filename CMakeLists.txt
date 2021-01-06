@@ -16,18 +16,35 @@ add_library(paper STATIC
 target_compile_features(paper PUBLIC cxx_std_14)
 
 set_target_properties(paper
-                    PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+                      PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_library(Solver STATIC
+    src/Solver.hpp
+    src/Solver.cpp
+    src/GenericCostSolver.hpp
+    src/GenericCostSolver.cu
+    src/MinimumTurnSolver.hpp
+    src/MinimumTurnSolver.cu
+)
+
+target_compile_features(Solver PUBLIC cxx_std_14)
+
+set_target_properties(Solver
+                     PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 #### build test ####
 # to run test
 # >$ dkb make test
 add_executable(Test
     tests/tests.cu
+    tests/SolverTests.cpp
+    tests/main.cpp
 )
 
 target_link_libraries(Test
     gtest
     paper
+    Solver
     ${CUDA_LIBRARIES}
 )
 
