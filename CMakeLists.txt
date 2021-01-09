@@ -19,6 +19,10 @@ set_target_properties(paper
                       PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(Solver STATIC
+    src/Helper.hpp
+    src/Polygon.hpp
+    src/Polygon.cpp
+
     src/Solver.hpp
     src/Solver.cpp
     src/GenericCostSolver.hpp
@@ -38,6 +42,7 @@ set_target_properties(Solver
 add_executable(Test
     tests/tests.cu
     tests/SolverTests.cpp
+    tests/PolygonTests.cpp
     tests/main.cpp
 )
 
