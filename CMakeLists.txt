@@ -29,6 +29,10 @@ add_library(Solver STATIC
     src/GenericCostSolver.cu
     src/MinimumTurnSolver.hpp
     src/MinimumTurnSolver.cu
+
+    src/SimpleDisp.hpp
+    src/SimpleDisp.cpp
+    src/SavePPM.hpp
 )
 
 target_compile_features(Solver PUBLIC cxx_std_14)
