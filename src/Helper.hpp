@@ -7,9 +7,7 @@
 #include <cuda_runtime_api.h> // cudaError_t
 #include <chrono>
 
-using float32_t = float;
-using float64_t = double;
-using char8_t   = char;
+#include "Types.hpp"
 
 static void HandleError(cudaError_t err, const char* file, int line)
 {

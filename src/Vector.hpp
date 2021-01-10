@@ -1,7 +1,7 @@
 #ifndef VECTOR_HPP_
 #define VECTOR_HPP_
 
-#include "Helper.hpp"
+#include "Types.hpp"
 #include <limits>
 #include <cmath>
 

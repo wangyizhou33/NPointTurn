@@ -19,10 +19,13 @@ set_target_properties(paper
                       PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_library(Solver STATIC
+    # util code
+    src/Types.hpp
     src/Helper.hpp
     src/Polygon.hpp
     src/Polygon.cpp
 
+    # solver code
     src/Solver.hpp
     src/Solver.cpp
     src/GenericCostSolver.hpp
@@ -30,9 +33,10 @@ add_library(Solver STATIC
     src/MinimumTurnSolver.hpp
     src/MinimumTurnSolver.cu
 
-    src/SimpleDisp.hpp
-    src/SimpleDisp.cpp
+    # visualization code
     src/SavePPM.hpp
+    src/SimpleDisp.hpp
+    src/Visualization.hpp
 )
 
 target_compile_features(Solver PUBLIC cxx_std_14)
@@ -47,6 +51,7 @@ add_executable(Test
     tests/tests.cu
     tests/SolverTests.cpp
     tests/PolygonTests.cpp
+    tests/FreespaceTests.cpp
     tests/main.cpp
 )
 

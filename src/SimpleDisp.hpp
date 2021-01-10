@@ -54,7 +54,7 @@ public:
         w = h = 0;
     }
 
-    void clean()
+    void tearDown()
     {
         if (mem != nullptr)
         {
@@ -66,16 +66,16 @@ public:
 
     ~SimpleDisp()
     {
-        clean();
+        tearDown();
     }
 
-    int init(int w_in = SIMPLE_DISP_WIDTH_DEFAULT, int h_in = SIMPLE_DISP_HEIGHT_DEFAULT, bool set_default_pattern = true)
+    int init(int w_in = SIMPLE_DISP_WIDTH_DEFAULT, int h_in = SIMPLE_DISP_HEIGHT_DEFAULT, bool set_default_pattern = false)
     {
-        clean();
+        tearDown();
         mem = (unsigned char*)malloc(sizeof(unsigned char) * 3 * w_in * h_in);
         if (mem == nullptr)
         {
-            clean();
+            tearDown();
             return (1);
         }
 
@@ -96,6 +96,13 @@ public:
         return (0);
     }
 
+    // clean the image
+    void clear()
+    {
+        if (mem)
+            std::fill_n(mem, 3 * w * h, 0);
+    }
+
     void set(const unsigned char* img)
     {
         std::copy_n(img, 3 * w * h, mem);
@@ -105,9 +112,8 @@ public:
     {
         return (mem);
     }
-    //int update(const char* name="SimpleDispOut")
+
     int update(const char* name = "SimpleDispOut.ppm")
-    //int update(const char* name = "C:\\SimpleDispOut.ppm")
     {
         if (mem == nullptr)
             return (1);
