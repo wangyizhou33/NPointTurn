@@ -24,6 +24,9 @@ add_library(Solver STATIC
     src/Helper.hpp
     src/Polygon.hpp
     src/Polygon.cpp
+    src/Freespace.hpp
+    src/Freespace.cu
+    src/Obstacle.hpp
 
     # solver code
     src/Solver.hpp
@@ -37,6 +40,7 @@ add_library(Solver STATIC
     src/SavePPM.hpp
     src/SimpleDisp.hpp
     src/Visualization.hpp
+    src/Visualization.cpp
 )
 
 target_compile_features(Solver PUBLIC cxx_std_14)

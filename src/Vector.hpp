@@ -12,6 +12,12 @@ bool isFloatZero(T a)
            a > -std::numeric_limits<T>::epsilon();
 }
 
+struct Vector2ui
+{
+    uint32_t x{};
+    uint32_t y{};
+};
+
 struct Vector2f
 {
     float32_t x{};
@@ -75,6 +81,11 @@ struct Vector2f
         return *this;
     };
 
+    Vector2f operator*(float32_t d) const
+    {
+        return {x * d, y * d};
+    };
+
     Vector2f operator/(float32_t d) const
     {
         return {x / d, y / d};
@@ -101,6 +112,12 @@ struct Vector2f
     {
         return x * in.x + y * in.y;
     };
+
+    Vector2f rotate(float32_t rad) const
+    {
+        return {std::cos(rad) * x - std::sin(rad) * y,
+                std::sin(rad) * x + std::cos(rad) * y};
+    }
 };
 
 #endif // VECTOR_HPP_

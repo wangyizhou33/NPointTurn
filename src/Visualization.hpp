@@ -3,14 +3,9 @@
 
 #include "SimpleDisp.hpp"
 #include "Types.hpp"
+#include "Helper.hpp"
+#include "Vector.hpp"
 #include <iostream>
-
-void signal_callback_handler(int signum)
-{
-    std::cout << "Caught signal " << signum << std::endl;
-    // Terminate program
-    exit(signum);
-}
 
 template <class IT>
 inline void drawDiamond(IT* img, int i, int j, int radius, int w, int h, IT fillval)
@@ -41,90 +36,41 @@ inline void drawDiamondColor(IT* img, int i, int j, int radius, int w, int h, IT
     drawDiamond<IT>(img + 2 * w * h, i, j, radius, w, h, fv3);
 }
 
+struct Pixel
+{
+    int i;
+    int j;
+};
+
 class Visualization
 {
 public:
-    Visualization()
-    {
-        m_d.init();
-    };
+    Visualization();
 
-    void draw()
-    {
-        int w              = m_d.getw();
-        int h              = m_d.geth();
-        unsigned char* img = m_d.get();
+    void draw();
 
-        // Register signal and signal handler
-        // catch ctrl+C
-        signal(SIGINT, signal_callback_handler);
-        do
-        {
-            m_d.clear();
-
-            // draw example
-            int i1 = h / 2 - (int)((0.0f - m_yc) * m_scale + 0.5f);
-            int j1 = w / 2 + (int)((0.0f - m_xc) * m_scale + 0.5f);
-            drawDiamondColor<unsigned char>(img, i1, j1, 5, w, h, 255, 255, 255);
-
-            m_d.update();
-            updateView();
-        } while (m_skipInput);
-    }
-
-    void updateView()
-    {
-        std::cout << "Adjust display {a, s}, {d, f}, {q, w}" << std::endl;
-        std::cout << "(S,xc,yc):(" << m_scale << "," << m_xc << "," << m_yc << ")" << std::endl;
-
-        unsigned char cm{};
-#ifdef WIN32
-        cm = _getch();
-#else
-        cm = getch();
-#endif
-        if (cm == 'a')
-        {
-            m_xc += m_scale;
-        }
-        else if (cm == 's')
-        {
-            m_xc -= m_scale;
-        }
-        else if (cm == 'd')
-        {
-            m_yc += m_scale;
-        }
-        else if (cm == 'f')
-        {
-            m_yc -= m_scale;
-        }
-        else if (cm == 'q')
-        {
-            m_scale *= 2.0f;
-        }
-        else if (cm == 'w')
-        {
-            m_scale *= 0.5f;
-        }
-        // else if (cm == 'p')
-        // {
-        //     break;
-        // }
-        else if (cm == 'u')
-        {
-            m_skipInput = false;
-        }
-    }
+    void setFreespace(const uint32_t* mem);
 
 private:
+    void updateView();
+
+    Pixel toPixel(const Vector2f& in) const;
+
+    // theta = k slice
+    void drawFreespace(uint32_t k);
+
     SimpleDisp m_d{};
 
     float32_t m_xc{0.0f}; // center x
     float32_t m_yc{0.0f}; // center y
-    float32_t m_scale{4.0f};
+    float32_t m_scale{12.0f};
+
+    Dimension m_dim{};
+    const uint32_t* m_freespace{nullptr};
 
     bool m_skipInput{true};
+
+    uint32_t m_theta{0u};
 
 }; // class Visualization
 

@@ -8,6 +8,42 @@
 #include <chrono>
 
 #include "Types.hpp"
+#include "Vector.hpp"
+
+struct Dimension
+{
+    uint32_t row{128u};    // elements in row
+    uint32_t col{128u};    // elements in col
+    uint32_t height{512u}; // elements in height
+
+    float32_t posRes{64.f / 128.f};
+    float32_t hdgRes{2.f * M_PI / 512.f};
+};
+
+inline Vector2f toCartesian(float32_t i, float32_t j, float32_t row, float32_t col, float32_t res)
+{
+    return Vector2f{
+        (i - row / 2) * res,
+        (j - col / 2) * res};
+};
+
+inline Vector2ui toIndex(float32_t x, float32_t y, uint32_t row, uint32_t col, float32_t res)
+{
+    return Vector2ui{
+        static_cast<uint32_t>(x / res) + row / 2u,
+        static_cast<uint32_t>(y / res) + col / 2u};
+};
+
+inline uint32_t index(uint32_t i, uint32_t j, uint32_t k,
+                      uint32_t row, uint32_t col, uint32_t height)
+{
+    return k * row * col + j * row + i;
+};
+
+inline bool isInBoundary(float32_t x, float32_t y, float32_t range)
+{
+    return x < range && x > -range && y < range && y > -range;
+}
 
 static void HandleError(cudaError_t err, const char* file, int line)
 {

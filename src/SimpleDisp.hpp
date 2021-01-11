@@ -23,7 +23,7 @@ inline unsigned char unsignedCharClip(T x)
 }
 
 // equivalen to MSFT _getch()
-char getch(void)
+inline char getch(void)
 {
     char buf           = 0;
     struct termios old = {0};
@@ -100,7 +100,7 @@ public:
     void clear()
     {
         if (mem)
-            std::fill_n(mem, 3 * w * h, 0);
+            std::fill_n(mem, 3 * w * h, 255); // white background
     }
 
     void set(const unsigned char* img)
@@ -120,8 +120,8 @@ public:
         return (savePPM(mem, w, h, name));
     }
 
-    int getw() { return (w); }
-    int geth() { return (h); }
+    int getw() const { return (w); }
+    int geth() const { return (h); }
 
     int w, h;
     unsigned char* mem;
