@@ -18,6 +18,8 @@ public:
 private:
     void computeSlice(uint32_t k);
 
+    void dilateSlice(uint32_t* mem);
+
     // freespace volume: row x col x height
     uint32_t m_size{};
 

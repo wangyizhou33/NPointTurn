@@ -86,7 +86,7 @@ void Visualization::updateView()
     }
     else if (cm == 'z')
     {
-        m_theta += 10u;
+        m_theta = (m_theta > 502u) ? m_theta : m_theta + 10u;
     }
     else if (cm == 'x')
     {
@@ -133,9 +133,13 @@ void Visualization::drawFreespace(uint32_t k)
             {
                 drawDiamondColor<unsigned char>(img, pix.i, pix.j, 1, w, h, 0, 0, 0);
             }
-            else
+            else if (m_freespace[ind] == 1u)
             {
                 drawDiamondColor<unsigned char>(img, pix.i, pix.j, 5, w, h, 255, 0, 0);
+            }
+            else if (m_freespace[ind] == 2u)
+            {
+                drawDiamondColor<unsigned char>(img, pix.i, pix.j, 5, w, h, 0, 0, 255);
             }
         }
     }

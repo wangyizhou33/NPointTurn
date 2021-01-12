@@ -37,12 +37,14 @@ void Freespace::computeFreespace(const std::vector<Obstacle>& vec)
             occupy(v1);
         }
     }
-    // end of process the 0-th slice
 
     for (uint32_t k = 1u; k < m_dim.height; ++k)
     {
         computeSlice(k);
+        dilateSlice(m_mem.get() + k * m_dim.row * m_dim.col);
     }
+    // dilate the 0-th slice
+    dilateSlice(m_mem.get());
 }
 
 void Freespace::computeSlice(uint32_t k)
@@ -67,4 +69,54 @@ void Freespace::computeSlice(uint32_t k)
             }
         }
     }
+}
+
+#define imax(a, b) (a > b) ? a : b;
+#define imin(a, b) (a < b) ? a : b;
+
+void Freespace::dilateSlice(uint32_t* mem)
+{
+    int radioR = 1;
+    int radioC = 4;
+
+    int height = m_dim.row;
+    int width  = m_dim.col;
+
+    uint32_t* tmp = new uint32_t[width * height];
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            int start_j    = imax(0, j - radioC);
+            int end_j      = imin(width - 1, j + radioC);
+            uint32_t value = 0u;
+            for (int jj = start_j; jj <= end_j; jj++)
+            {
+                value = imax(mem[i * width + jj], value);
+            }
+            tmp[i * width + j] = value;
+        }
+    }
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            int start_i    = imax(0, i - radioR);
+            int end_i      = imin(height - 1, i + radioR);
+            uint32_t value = 0u;
+            for (int ii = start_i; ii <= end_i; ii++)
+            {
+                value = imax(tmp[ii * width + j], value);
+            }
+            if (value == 1u)
+            {
+                if (mem[i * width + j] == 0u)
+                {
+                    mem[i * width + j] = 2u; // differentiate actual and dilation
+                }
+            }
+            // mem[i * width + j] = value;
+        }
+    }
+    delete[](tmp);
 }
