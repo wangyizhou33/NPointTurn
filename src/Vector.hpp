@@ -4,6 +4,7 @@
 #include "Types.hpp"
 #include <limits>
 #include <cmath>
+#include <cuda_runtime_api.h> // host device qualifier
 
 template <typename T>
 bool isFloatZero(T a)
@@ -23,7 +24,7 @@ struct Vector2f
     float32_t x{};
     float32_t y{};
 
-    Vector2f(float32_t _x, float32_t _y)
+    __device__ __host__ Vector2f(float32_t _x, float32_t _y)
         : x(_x)
         , y(_y){};
 
@@ -113,7 +114,7 @@ struct Vector2f
         return x * in.x + y * in.y;
     };
 
-    Vector2f rotate(float32_t rad) const
+    __device__ __host__ Vector2f rotate(float32_t rad) const
     {
         return {std::cos(rad) * x - std::sin(rad) * y,
                 std::sin(rad) * x + std::cos(rad) * y};

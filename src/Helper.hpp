@@ -20,27 +20,28 @@ struct Dimension
     float32_t hdgRes{2.f * M_PI / 512.f};
 };
 
-inline Vector2f toCartesian(float32_t i, float32_t j, float32_t row, float32_t col, float32_t res)
+__device__ __host__ __inline__ Vector2f toCartesian(float32_t i, float32_t j, float32_t row, float32_t col, float32_t res)
 {
     return Vector2f{
         (i - row / 2) * res,
         (j - col / 2) * res};
 };
 
-inline Vector2ui toIndex(float32_t x, float32_t y, uint32_t row, uint32_t col, float32_t res)
+__device__ __host__ __inline__ Vector2ui toIndex(float32_t x, float32_t y, uint32_t row, uint32_t col, float32_t res)
 {
     return Vector2ui{
-        static_cast<uint32_t>(x / res) + row / 2u,
-        static_cast<uint32_t>(y / res) + col / 2u};
+        static_cast<uint32_t>(x / res + static_cast<float32_t>(row) / 2.f),
+        static_cast<uint32_t>(y / res + static_cast<float32_t>(col) / 2.f)};
+    // Note: static_cast<uint32_t>(y / res) + col / 2u shows a wrong result in device
 };
 
-inline uint32_t index(uint32_t i, uint32_t j, uint32_t k,
-                      uint32_t row, uint32_t col, uint32_t height)
+__device__ __host__ __inline__ uint32_t index(uint32_t i, uint32_t j, uint32_t k,
+                                              uint32_t row, uint32_t col, uint32_t height)
 {
     return k * row * col + j * row + i;
 };
 
-inline bool isInBoundary(float32_t x, float32_t y, float32_t range)
+__device__ __host__ __inline__ bool isInBoundary(float32_t x, float32_t y, float32_t range)
 {
     return x < range && x > -range && y < range && y > -range;
 }

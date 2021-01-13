@@ -24,7 +24,10 @@ TEST(FreespaceTests, temp)
 
         vec.push_back(obs);
     }
-    freespace.computeFreespace(vec);
+
+    // 847.612 ms
+    // TIME_PRINT("CPU", freespace.computeFreespaceCPU(vec));
+    TIME_PRINT("GPU", freespace.computeFreespaceGPU(vec));
 
     vis.draw();
 }
