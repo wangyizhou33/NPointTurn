@@ -6,21 +6,15 @@ Freespace::Freespace()
 {
     m_size = m_dim.row * m_dim.col * m_dim.height;
     m_mem  = std::make_unique<value_type[]>(m_size);
-    std::fill_n(m_mem.get(), m_size, 0u);
 
-    HANDLE_ERROR(cudaMalloc((void**)&m_cuObs, OBS_BYTE_SIZE));
     HANDLE_ERROR(cudaMalloc((void**)&m_cuMem, m_size * sizeof(value_type)));
     HANDLE_ERROR(cudaMalloc((void**)&m_cuMem1, m_size * sizeof(value_type)));
-    HANDLE_ERROR(cudaMemset((void*)m_cuMem, 0, m_size * sizeof(value_type)));
-    HANDLE_ERROR(cudaMemset((void*)m_cuMem1, 0, m_size * sizeof(value_type)));
+
+    reset();
 }
 
 Freespace::~Freespace()
 {
-    if (m_cuObs)
-    {
-        HANDLE_ERROR(cudaFree(m_cuObs));
-    }
     if (m_cuMem)
     {
         HANDLE_ERROR(cudaFree(m_cuMem));
@@ -28,6 +22,22 @@ Freespace::~Freespace()
     if (m_cuMem1)
     {
         HANDLE_ERROR(cudaFree(m_cuMem1));
+    }
+}
+
+void Freespace::reset()
+{
+    if (m_mem)
+    {
+        std::fill_n(m_mem.get(), m_size, 0u);
+    }
+    if (m_cuMem)
+    {
+        HANDLE_ERROR(cudaMemset((void*)m_cuMem, 0, m_size * sizeof(value_type)));
+    }
+    if (m_cuMem1)
+    {
+        HANDLE_ERROR(cudaMemset((void*)m_cuMem1, 0, m_size * sizeof(value_type)));
     }
 }
 
@@ -51,18 +61,6 @@ void Freespace::computeFreespaceCPU(const std::vector<Obstacle>& vec)
 
 void Freespace::computeFreespaceGPU(const std::vector<Obstacle>& vec)
 {
-    // size check
-    // size needs to be smaller than the capacity of the device memory
-    if (vec.size() > OBS_BYTE_SIZE / sizeof(Obstacle))
-    {
-        throw;
-    }
-
-    HANDLE_ERROR(cudaMemcpy(m_cuObs,
-                            &vec.front(),
-                            OBS_BYTE_SIZE,
-                            cudaMemcpyHostToDevice));
-
     // compute "occupancy" in the 0-th slice
     compute0Slice(vec);
 
@@ -97,6 +95,9 @@ void Freespace::compute0Slice(const std::vector<Obstacle>& vec)
 
         m_mem[index(ind.x, ind.y, 0u, m_dim.row, m_dim.col, m_dim.height)] = 1u;
     };
+
+    // clear
+    std::fill_n(m_mem.get(), m_dim.row * m_dim.col, 0u);
 
     // fill the 0-th slice of the volume
     for (const Obstacle& obs : vec)

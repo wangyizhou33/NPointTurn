@@ -13,6 +13,8 @@ public:
     Freespace();
     ~Freespace();
 
+    void reset();
+
     /**
      * Calculate the freespace volume from input obstacle vector
      * CPU implementation
@@ -46,10 +48,6 @@ private:
                                            // 0 is free
     value_type* m_cuMem{};                 // device memory of freespace volume
     value_type* m_cuMem1{};                // temp memory for the dilation step
-
-    // byte size of m_cuObs
-    const size_t OBS_BYTE_SIZE = sizeof(Obstacle) * 50u;
-    Obstacle* m_cuObs{}; // device memory of input obstacles
 
     // dilation amount
     int radioR = 1;
