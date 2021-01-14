@@ -127,7 +127,7 @@ void Visualization::drawFreespace(uint32_t k)
         {
             Vector2f pos = toCartesian(i, j, m_dim.row, m_dim.col, m_dim.posRes);
             Pixel pix    = toPixel(pos);
-            uint32_t ind = index(i, j, k, m_dim.row, m_dim.col, m_dim.height);
+            uint32_t ind = index(i, j, k, m_dim.row, m_dim.col);
 
             if (m_freespace[ind] == 0u)
             {

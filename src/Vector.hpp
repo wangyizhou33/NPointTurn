@@ -5,6 +5,7 @@
 #include <limits>
 #include <cmath>
 #include <cuda_runtime_api.h> // host device qualifier
+#include <iostream>
 
 template <typename T>
 bool isFloatZero(T a)
@@ -118,6 +119,54 @@ struct Vector2f
     {
         return {std::cos(rad) * x - std::sin(rad) * y,
                 std::sin(rad) * x + std::cos(rad) * y};
+    }
+};
+
+struct Vector2i
+{
+    int32_t x{};
+    int32_t y{};
+
+    Vector2i(int32_t _x, int32_t _y)
+        : x(_x)
+        , y(_y){};
+
+    // This function is preferred because
+    // two opposite rotations result in the same point
+    // useful in rotating a bit map
+    // TODO: impl a different shear sequence if rad is big, i.e. close to pi
+    Vector2i shearRotate(float32_t rad)
+    {
+        int32_t xx = x;
+        int32_t yy = y;
+
+        float32_t alpha = -std::tan(rad / 2.0f);
+        float32_t beta  = std::sin(rad);
+        float32_t gamma = alpha;
+
+        // std::cerr << alpha << " " << beta << " " << gamma << std::endl;
+
+        // any orthogonal transformation can be realized by a combination of
+        // a shear along one axis, then a shear along the other axis,
+        // followed by another shear along the first axis
+        // 1) shear_x by alpha * y
+        float32_t skew{};
+        int32_t skewi{};
+        skew  = alpha * (float32_t)yy;
+        skewi = (int32_t)std::floor(skew + 0.5f);
+        xx += skewi;
+
+        // 2) shear_y by beta * x
+        skew  = beta * (float32_t)xx;
+        skewi = (int32_t)std::floor(skew + 0.5f);
+        yy += skewi;
+
+        // 3) shear_x by gamma * y
+        skew  = gamma * (float32_t)yy;
+        skewi = (int32_t)std::floor(skew + 0.5f);
+        xx += skewi;
+
+        return {xx, yy};
     }
 };
 

@@ -53,6 +53,7 @@ set_target_properties(Solver
 # >$ dkb make test
 add_executable(Test
     tests/tests.cu
+    tests/VectorTests.cpp
     tests/SolverTests.cpp
     tests/PolygonTests.cpp
     tests/FreespaceTests.cpp

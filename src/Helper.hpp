@@ -36,7 +36,7 @@ __device__ __host__ __inline__ Vector2ui toIndex(float32_t x, float32_t y, uint3
 };
 
 __device__ __host__ __inline__ uint32_t index(uint32_t i, uint32_t j, uint32_t k,
-                                              uint32_t row, uint32_t col, uint32_t height)
+                                              uint32_t row, uint32_t col)
 {
     return k * row * col + j * row + i;
 };

@@ -93,7 +93,7 @@ void Freespace::compute0Slice(const std::vector<Obstacle>& vec)
     auto occupy = [this](const Vector2f& v) {
         Vector2ui ind = toIndex(v.x, v.y, m_dim.row, m_dim.col, m_dim.posRes);
 
-        m_mem[index(ind.x, ind.y, 0u, m_dim.row, m_dim.col, m_dim.height)] = 1u;
+        m_mem[index(ind.x, ind.y, 0u, m_dim.row, m_dim.col)] = 1u;
     };
 
     // clear
@@ -129,14 +129,14 @@ void Freespace::computeSliceCPU(uint32_t k)
         {
             Vector2f pos    = toCartesian(i, j, m_dim.row, m_dim.col, m_dim.posRes);
             float32_t theta = static_cast<float32_t>(k) * m_dim.hdgRes;
-            uint32_t ind    = index(i, j, k, m_dim.row, m_dim.col, m_dim.height);
+            uint32_t ind    = index(i, j, k, m_dim.row, m_dim.col);
 
             Vector2f newPos = pos.rotate(-theta);
 
             if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
             {
                 Vector2ui newInd = toIndex(newPos.x, newPos.y, m_dim.row, m_dim.col, m_dim.posRes);
-                if (m_mem[index(newInd.x, newInd.y, 0u, m_dim.row, m_dim.col, m_dim.height)] == 1u)
+                if (m_mem[index(newInd.x, newInd.y, 0u, m_dim.row, m_dim.col)] == 1u)
                 {
                     m_mem[ind] = 1u;
                 }
@@ -204,14 +204,14 @@ void Freespace::rotateCPU()
             {
                 // std::cerr << i << " " << j << std::endl;
                 Vector2f pos = toCartesian(i, j, m_dim.row, m_dim.col, m_dim.posRes);
-                uint32_t ind = index(i, j, 0, m_dim.row, m_dim.col, m_dim.height);
+                uint32_t ind = index(i, j, 0, m_dim.row, m_dim.col);
 
                 Vector2f newPos = pos.rotate(theta);
 
                 if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
                 {
                     Vector2ui newInd = toIndex(newPos.x, newPos.y, m_dim.row, m_dim.col, m_dim.posRes);
-                    dst[ind]         = src[index(newInd.x, newInd.y, 0u, m_dim.row, m_dim.col, m_dim.height)];
+                    dst[ind]         = src[index(newInd.x, newInd.y, 0u, m_dim.row, m_dim.col)];
                 }
             }
         }
@@ -260,14 +260,14 @@ __global__ void _computeSliceGPU(Freespace::value_type* mem,
 
         Vector2f pos    = toCartesian((float32_t)i, (float32_t)j, (float32_t)row, (float32_t)col, posRes);
         float32_t theta = static_cast<float32_t>(k) * hdgRes;
-        uint32_t ind    = index(i, j, k, row, col, height);
+        uint32_t ind    = index(i, j, k, row, col);
 
         Vector2f newPos = pos.rotate(-theta);
 
         if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
         {
             Vector2ui newInd = toIndex(newPos.x, newPos.y, row, col, posRes);
-            if (mem[index(newInd.x, newInd.y, 0u, row, col, height)] == (Freespace::value_type)1)
+            if (mem[index(newInd.x, newInd.y, 0u, row, col)] == (Freespace::value_type)1)
             {
                 mem[ind] = (Freespace::value_type)1;
             }
@@ -372,14 +372,14 @@ __global__ void _rotateKernel(Freespace::value_type* dst,
 
         Vector2f pos    = toCartesian((float32_t)i, (float32_t)j, (float32_t)row, (float32_t)col, posRes);
         float32_t theta = static_cast<float32_t>(k) * hdgRes;
-        uint32_t ind    = index(i, j, k, row, col, height);
+        uint32_t ind    = index(i, j, k, row, col);
 
         Vector2f newPos = pos.rotate(theta);
 
         if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
         {
             Vector2ui newInd = toIndex(newPos.x, newPos.y, row, col, posRes);
-            dst[ind]         = src[index(newInd.x, newInd.y, k, row, col, height)];
+            dst[ind]         = src[index(newInd.x, newInd.y, k, row, col)];
         }
 
         tid += blockDim.x; // 32 times
