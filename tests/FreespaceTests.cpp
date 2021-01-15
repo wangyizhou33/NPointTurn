@@ -41,7 +41,7 @@ TEST(FreespaceTests, temp)
     // 4.61719 ms
     TIME_PRINT("GPU", freespace.computeFreespaceGPU(vec));
 
-    vis.draw();
+    // vis.draw();
 }
 
 TEST(FreespaceTests, CPUvsGPU)
@@ -302,5 +302,5 @@ TEST(FreespaceTests, rotationByShearing)
     Visualization vis{};
     vis.setFreespace(mem1.get());
 
-    vis.draw();
+    // vis.draw();
 }

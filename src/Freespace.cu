@@ -131,7 +131,7 @@ void Freespace::computeSliceCPU(uint32_t k)
             float32_t theta = static_cast<float32_t>(k) * m_dim.hdgRes;
             uint32_t ind    = index(i, j, k, m_dim.row, m_dim.col);
 
-            Vector2f newPos = pos.rotate(-theta);
+            Vector2f newPos = pos.rotate(theta);
 
             if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
             {
@@ -206,7 +206,7 @@ void Freespace::rotateCPU()
                 Vector2f pos = toCartesian(i, j, m_dim.row, m_dim.col, m_dim.posRes);
                 uint32_t ind = index(i, j, 0, m_dim.row, m_dim.col);
 
-                Vector2f newPos = pos.rotate(theta);
+                Vector2f newPos = pos.rotate(-theta);
 
                 if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
                 {
@@ -262,7 +262,7 @@ __global__ void _computeSliceGPU(Freespace::value_type* mem,
         float32_t theta = static_cast<float32_t>(k) * hdgRes;
         uint32_t ind    = index(i, j, k, row, col);
 
-        Vector2f newPos = pos.rotate(-theta);
+        Vector2f newPos = pos.rotate(theta);
 
         if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
         {
@@ -374,7 +374,7 @@ __global__ void _rotateKernel(Freespace::value_type* dst,
         float32_t theta = static_cast<float32_t>(k) * hdgRes;
         uint32_t ind    = index(i, j, k, row, col);
 
-        Vector2f newPos = pos.rotate(theta);
+        Vector2f newPos = pos.rotate(-theta);
 
         if (isInBoundary(newPos.x, newPos.y, 30.f)) //TODO: fix the hack
         {
