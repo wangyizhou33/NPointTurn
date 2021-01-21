@@ -57,6 +57,7 @@ add_executable(Test
     tests/SolverTests.cpp
     tests/PolygonTests.cpp
     tests/FreespaceTests.cpp
+    tests/SOLTests.cu
     tests/main.cpp
 )
 

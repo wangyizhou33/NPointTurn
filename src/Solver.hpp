@@ -33,6 +33,9 @@ public:
     void setUp(){};
     void TearDown(){};
 
+protected:
+    static const Dimension m_dim;
+
 private:
 }; // class Solver
 
