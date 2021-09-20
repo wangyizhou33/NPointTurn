@@ -2,6 +2,7 @@
 #include "../src/Helper.hpp"
 #include "../src/GenericCostSolver.hpp"
 #include "../src/MinimumTurnSolver.hpp"
+#include <bitset>
 
 __global__ void naiveCopy(uint32_t* dst, const uint32_t* src, uint32_t N)
 {
@@ -119,11 +120,23 @@ void transpose64(uint64_t a[64])
 
     for (j = 32, m = 0x00000000FFFFFFFF; j; j >>= 1, m ^= m << j)
     {
+        std::cerr << "j " << j << " m " << std::bitset<64>(m) << std::endl;
         for (k = 0; k < 64; k = ((k | j) + 1) & ~j)
         {
+            std::cerr << "k " << k << std::endl;
             t = (a[k] ^ (a[k | j] >> j)) & m;
+
+            std::cerr << "inside " << k << " " << (k | j) << std::endl;
+            std::cerr << std::bitset<64>(a[k]) << std::endl;
+            std::cerr << std::bitset<64>(a[k | j]) << std::endl;
+            std::cerr << std::bitset<64>(a[k | j] >> j) << std::endl;
+            std::cerr << std::bitset<64>(t) << std::endl;
+
             a[k] ^= t;
             a[k | j] ^= (t << j);
+
+            std::cerr << std::bitset<64>(a[k]) << std::endl;
+            std::cerr << std::bitset<64>(a[k | j]) << std::endl;
         }
     }
 }
@@ -198,17 +211,20 @@ uint64_t logo[] = {
 void printbits(uint64_t a[64])
 {
     int i, j;
-
     for (i = 0; i < 64; i++)
     {
-        for (j = 63; j >= 0; j--)
-            printf("%c", (a[i] >> j) & 1 ? '1' : '0');
-        printf("\n");
+        std::cout << std::bitset<64>(a[i]) << std::endl;
     }
 }
 
 TEST(SOLTests, bitTranspose)
 {
+    // std::cout << "Before: " << "\n\n";
+    // printbits(logo);
+    // std::cout << "\n\n";
+
     transpose64(logo);
-    printbits(logo);
+
+    // std::cout << "After: " << "\n\n";
+    // printbits(logo);
 }
