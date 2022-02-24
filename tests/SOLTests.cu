@@ -120,23 +120,11 @@ void transpose64(uint64_t a[64])
 
     for (j = 32, m = 0x00000000FFFFFFFF; j; j >>= 1, m ^= m << j)
     {
-        std::cerr << "j " << j << " m " << std::bitset<64>(m) << std::endl;
-        for (k = 0; k < 64; k = ((k | j) + 1) & ~j)
+        for (k = 0; k < 64; k = ((k + j) + 1) & ~j)
         {
-            std::cerr << "k " << k << std::endl;
-            t = (a[k] ^ (a[k | j] >> j)) & m;
-
-            std::cerr << "inside " << k << " " << (k | j) << std::endl;
-            std::cerr << std::bitset<64>(a[k]) << std::endl;
-            std::cerr << std::bitset<64>(a[k | j]) << std::endl;
-            std::cerr << std::bitset<64>(a[k | j] >> j) << std::endl;
-            std::cerr << std::bitset<64>(t) << std::endl;
-
+            t = (a[k] ^ (a[k + j] >> j)) & m;
             a[k] ^= t;
-            a[k | j] ^= (t << j);
-
-            std::cerr << std::bitset<64>(a[k]) << std::endl;
-            std::cerr << std::bitset<64>(a[k | j]) << std::endl;
+            a[k + j] ^= (t << j);
         }
     }
 }
@@ -219,12 +207,12 @@ void printbits(uint64_t a[64])
 
 TEST(SOLTests, bitTranspose)
 {
-    // std::cout << "Before: " << "\n\n";
-    // printbits(logo);
-    // std::cout << "\n\n";
+    std::cout << "Before: " << "\n\n";
+    printbits(logo);
+    std::cout << "\n\n";
 
     transpose64(logo);
 
-    // std::cout << "After: " << "\n\n";
-    // printbits(logo);
+    std::cout << "After: " << "\n\n";
+    printbits(logo);
 }
