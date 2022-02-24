@@ -40,3 +40,14 @@ TEST(VectorTests, correspondence)
         }
     }
 }
+
+TEST(VectorTests, transform)
+{
+    Vector2f a{10.0f, 0.0f};
+    float32_t theta = 1.57f;
+
+    Vector2f b{5.0f, 0.0f};
+
+    // b represented w.r.t. a
+    b = b.transform(theta, a);
+}

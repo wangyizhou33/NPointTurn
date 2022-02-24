@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
 #include "../src/Freespace.hpp"
 #include "../src/Visualization.hpp"
+#include "../src/Paper.hpp"
 #include <numeric> // accumulate
+#include "json.hpp"
 
 /**
  * Testing strategy:
@@ -26,6 +28,81 @@ Obstacle createObstacle()
     return obs;
 }
 
+const float32_t width  = 2.0f;
+const float32_t length = 5.0f;
+Obstacle createObstacle(const Vector2f& pos, float32_t hdg)
+{
+    Obstacle obs{};
+    obs.pos = pos;
+    obs.hdg = hdg;
+
+    obs.boundaryPoints.push_back(pos + Vector2f{length / 2.0f, width / 2.0f}.rotate(hdg));
+    obs.boundaryPoints.push_back(pos + Vector2f{length / 2.0f, -width / 2.0f}.rotate(hdg));
+    obs.boundaryPoints.push_back(pos + Vector2f{-length / 2.0f, -width / 2.0f}.rotate(hdg));
+    obs.boundaryPoints.push_back(pos + Vector2f{-length / 2.0f, width / 2.0f}.rotate(hdg));
+    obs.boundaryPoints.push_back(pos + Vector2f{length / 2.0f, width / 2.0f}.rotate(hdg));
+
+    return obs;
+}
+
+const nlohmann::json slanted =
+    {
+        {"ego",
+         {{"x", -755.12},
+          {"y", -344.83},
+          {"yaw", -71.719}}},
+        {"park",
+         {{"x", -757.85},
+          {"y", -352.57},
+          {"yaw", -35.0}}},
+        {"obstacles",
+         {
+             {{"x", -759.22},
+              {"y", -347.37},
+              {"yaw", -35.0}},
+             {{"x", -756.73},
+              {"y", -356.80},
+              {"yaw", -35.0}},
+             {{"x", -755.17},
+              {"y", -362.03},
+              {"yaw", -35.0}},
+         }}};
+
+const nlohmann::json test =
+    {
+        {"ego",
+         {{"x", 0},
+          {"y", 0},
+          {"yaw", 0}}},
+        {"park",
+         {{"x", -757.85},
+          {"y", -352.57},
+          {"yaw", -35.0}}},
+        {"obstacles",
+         {
+             {{"x", 10.0},
+              {"y", 0.0},
+              {"yaw", 45}},
+         }}};
+
+void createScene(std::vector<Obstacle>& vec)
+{
+    auto j = slanted;
+
+    Vector2f ego  = {j["ego"]["x"], j["ego"]["y"]};
+    float32_t psi = deg2Rad(j["ego"]["yaw"]);
+
+    for (size_t i = 0; i < j["obstacles"].size(); ++i)
+    {
+        auto obstacle   = j["obstacles"].at(i);
+        Vector2f obs    = {obstacle["x"], obstacle["y"]};
+        float32_t theta = deg2Rad(obstacle["yaw"]);
+
+        obs = obs.transform(psi, ego);
+        vec.push_back(createObstacle(obs, theta - psi));
+    }
+}
+
 TEST(FreespaceTests, temp)
 {
     Freespace freespace{};
@@ -33,15 +110,15 @@ TEST(FreespaceTests, temp)
     vis.setFreespace(freespace.get());
 
     std::vector<Obstacle> vec{};
-    vec.push_back(createObstacle());
-
+    // vec.push_back(createObstacle());
+    createScene(vec);
     // 1430.49 ms
     // TIME_PRINT("CPU", freespace.computeFreespaceCPU(vec));
 
     // 4.61719 ms
     TIME_PRINT("GPU", freespace.computeFreespaceGPU(vec));
 
-    // vis.draw();
+    vis.draw();
 }
 
 TEST(FreespaceTests, CPUvsGPU)

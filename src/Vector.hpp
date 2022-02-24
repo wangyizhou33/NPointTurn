@@ -120,6 +120,12 @@ struct Vector2f
         return {std::cos(rad) * x - std::sin(rad) * y,
                 std::sin(rad) * x + std::cos(rad) * y};
     }
+
+    Vector2f transform(float rad, const Vector2f& pos) const
+    {
+        return {std::cos(rad) * x + std::sin(rad) * y - std::cos(rad) * pos.x - std::sin(rad) * pos.y,
+                -std::sin(rad) * x + std::cos(rad) * y + std::sin(rad) * pos.x - std::cos(rad) * pos.y};
+    }
 };
 
 struct Vector2i
