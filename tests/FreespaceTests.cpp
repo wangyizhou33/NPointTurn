@@ -68,6 +68,60 @@ const nlohmann::json slanted =
               {"yaw", -35.0}},
          }}};
 
+const nlohmann::json parallel =
+    {
+        {"ego",
+         {{"x", -732.34},
+          {"y", -341.41},
+          {"yaw", 8.438}}},
+        {"obstacles",
+         {
+             {{"x", -715.68},
+              {"y", -339.77},
+              {"yaw", -120.0}},
+             {{"x", -714.23},
+              {"y", -343.77},
+              {"yaw", -120.0}},
+             {{"x", -713.18},
+              {"y", -349.09},
+              {"yaw", -120.0}},
+             {{"x", -711.96},
+              {"y", -353.86},
+              {"yaw", -120.0}},
+             {{"x", -732.39},
+              {"y", -337.09},
+              {"yaw", 10.0}},
+         }}};
+
+const nlohmann::json perpendicular =
+    {
+        {"ego",
+         {{"x", -710.1},
+          {"y", -367.28},
+          {"yaw", -77.344}}},
+        {"obstacles",
+         {
+             {{"x", -715.43},
+              {"y", -372.22},
+              {"yaw", 10.0}},
+             {{"x", -714.71},
+              {"y", -375.26},
+              {"yaw", 10.0}},
+             {{"x", -713.77},
+              {"y", -381.06},
+              {"yaw", 10.0}},
+             {{"x", -713.34},
+              {"y", -384.05},
+              {"yaw", 10.0}},
+             {{"x", -712.93},
+              {"y", -387.23},
+              {"yaw", 10.0}},
+             {{"x", -712.38},
+              {"y", -389.73},
+              {"yaw", 10.0}},
+         }}};
+
+
 const nlohmann::json test =
     {
         {"ego",
@@ -87,7 +141,7 @@ const nlohmann::json test =
 
 void createScene(std::vector<Obstacle>& vec)
 {
-    auto j = slanted;
+    auto j = perpendicular;
 
     Vector2f ego  = {j["ego"]["x"], j["ego"]["y"]};
     float32_t psi = deg2Rad(j["ego"]["yaw"]);
